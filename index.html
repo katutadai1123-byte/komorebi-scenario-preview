@@ -78,7 +78,7 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 <div class="menu-panel"><div class="menu-head"><h2>章一覧</h2><button type="button" id="close-menu">× 閉じる</button></div>
 <p>読み直したい章を選択してください。</p><div id="chapter-list"></div></div></section>
 <div id="endcard"><h2>ここまで</h2><p>収録シーンの再生が終わりました。</p><button id="restart" type="button">最初から</button></div>
-<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19 · v3.0</small><h1>ミカ過去編</h1><p>全19章収録 · 章一覧／オート／スキップ<br>仮原稿プレビュー（セーブデータへの影響なし）</p><button id="start">イベントを見る ›</button></div>
+<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19 · v3.1</small><h1>ミカ過去編</h1><p>全19章収録 · 章一覧／オート／スキップ<br>仮原稿プレビュー（セーブデータへの影響なし）</p><button id="start">イベントを見る ›</button></div>
 </div><script src="./mika_past01_preview.js"></script><script src="./scenes_02_06.js"></script><script src="./scenes_07_19.js"></script>
 <script>
 'use strict';
@@ -101,7 +101,8 @@ const portraits={
  casual:'portrait_mika_casual.webp',
  athletic:'portrait_mika_athletic.webp',
  gothic:'portrait_mika_gothic.webp',
- hospital:'portrait_mika_hospital.webp'
+ hospital:'portrait_mika_hospital.webp',
+ mother:'portrait_mika_mother.webp'
 };
 function stageFor(location){
  if(location.includes('競技場・更衣'))return 'BG03';
@@ -116,7 +117,10 @@ function stageFor(location){
  if(location.includes('病室'))return 'BG09';
  return '';
 }
-function portraitFor(n,location){
+function portraitFor(n,location,lineIndex){
+ // Scene 08: this adult character is Mika's mother, not Mika herself.
+ // Keep her on screen for the hospital-family conversation, then withdraw when Mika appears.
+ if(n===8)return lineIndex<14?'mother':'';
  if(n===1)return location.includes('競技場')?'athletic':'gothic';
  if(n===2)return location.includes('更衣')?'athletic':'gothic';
  if(n===3)return 'athletic';
@@ -137,7 +141,7 @@ function cancelAuto(){
 }
 function resetArt(){lastArtKey='';lastPortrait='';backdrop.style.backgroundImage='';portrait.hidden=true;portrait.removeAttribute('src');el('art-note').hidden=false}
 function renderArt(){
- const n=chapters[ci].number,asset=stageFor(place),p=portraitFor(n,place),key=asset+':'+place;
+ const n=chapters[ci].number,asset=stageFor(place),p=portraitFor(n,place,li),key=asset+':'+place;
  if(key!==lastArtKey){
    lastArtKey=key;
    backdrop.style.backgroundImage='radial-gradient(ellipse at 50% 35%,#4c3850,#201b2b)';
