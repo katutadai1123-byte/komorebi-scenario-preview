@@ -1,0 +1,52 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><title>こもれび館｜Scene 01 仮原稿テスト</title>
+<!-- Standalone Pages preview: all styling is self-contained. -->
+<style>
+html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif}
+#preview{position:fixed;inset:0;overflow:hidden;background:radial-gradient(ellipse at 55% 35%,#4b364d,#211c28 70%);cursor:pointer}
+.scene-place{position:absolute;top:5%;left:5%;z-index:2;font-size:clamp(13px,1.35vw,18px);letter-spacing:.13em;color:#f6d9e7;padding:12px 16px;border-left:3px solid #d995b5;background:#100e1977}
+.scene-note{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);font-size:clamp(13px,2vw,25px);color:#dbd0d8;letter-spacing:.13em;text-align:center;opacity:.6}
+.scene-dialog{position:absolute;bottom:5%;left:13%;right:13%;min-height:24%;box-sizing:border-box;background:rgba(254,232,242,.9);border:2px solid #fffc;border-radius:23px;box-shadow:0 10px 35px #130c1c88;padding:clamp(27px,3vw,46px) clamp(22px,4vw,60px);color:#483044}
+.scene-speaker{position:absolute;top:-21px;left:30px;padding:8px 32px;background:#c883a6;border:2px solid #fff;border-radius:35px;color:#fff;font-size:clamp(13px,1.4vw,19px);font-weight:bold}
+.scene-dialog p{font-size:clamp(16px,1.8vw,25px);font-weight:650;line-height:1.7;white-space:pre-wrap;margin:0;max-height:27vh;overflow-y:auto}
+.scene-progress{position:absolute;bottom:12px;right:23px;font-size:12px;color:#78556f}
+.scene-dialog.narration{background:rgba(34,26,43,.91);color:#f6e9f0;border-color:#aa91a9}
+.scene-dialog.narration p{font-weight:500}
+#back{position:absolute;top:5%;right:5%;z-index:8;border:1px solid #fbdde8;border-radius:30px;padding:9px 18px;color:#fff;background:#352a3ea8;cursor:pointer}
+#intro{position:absolute;inset:0;display:grid;place-content:center;text-align:center;background:#211925b8;z-index:4}
+#intro h1{font-size:clamp(25px,4vw,50px);margin:10px}
+#intro small{letter-spacing:.2em;color:#ecbdd5}
+#intro p{font-size:13px;color:#f3dce9}
+#start{margin:24px auto;border:1px solid #fff;background:#bb789c;color:white;border-radius:28px;padding:12px 34px;cursor:pointer}
+@media(max-height:470px){.scene-dialog{bottom:2%;min-height:30%;padding:23px 24px 10px}.scene-dialog p{font-size:15px}.scene-place{top:3%}}
+</style></head>
+<body><div id="preview" role="main" aria-label="ミカ過去編の仮原稿プレビュー" tabindex="0">
+<div class="scene-note">背景・立ち絵は制作中<br><small>原稿のテンポを確認する試作</small></div>
+<div class="scene-place" id="place"></div>
+<div class="scene-dialog" id="dialog" hidden><div class="scene-speaker" id="speaker"></div><p id="text"></p><div class="scene-progress" id="progress"></div></div>
+<button id="back" aria-label="最初から再生">↺ 最初から</button>
+<div id="intro"><small>MIKA / PAST ARC · SCENE 01</small><h1>勝敗の行方</h1><p>仮原稿の演出テスト（セーブデータへの影響なし）</p><button id="start">イベントを見る ›</button></div>
+</div><script src="./mika_past01_preview.js"></script>
+<script>
+'use strict';
+const story=window.KM_MANUSCRIPT_PREVIEWS.mika_past01;
+let index=-1,place=story.topic;
+const el=id=>document.getElementById(id);
+function draw(){
+ if(index<0){el('intro').hidden=false;el('intro').style.display='grid';el('dialog').hidden=true;el('place').textContent=story.topic;return;}
+ el('intro').hidden=true;el('intro').style.display='none';el('dialog').hidden=false;
+ if(index>=story.lines.length){index=-1;draw();return}
+ const line=story.lines[index];if(line.place)place=line.place;
+ el('place').textContent=place;
+ el('dialog').classList.toggle('narration',!line.speaker);
+ el('speaker').style.display=line.speaker?'block':'none';
+ el('speaker').textContent=line.speaker;
+ el('text').textContent=line.text;
+ el('progress').textContent=(index+1)+' / '+story.lines.length+' · タップで進む';
+}
+function next(){index++;draw()}
+el('preview').addEventListener('click',e=>{if(e.target.closest('button'))return;next()});
+el('start').addEventListener('click',next);
+el('back').addEventListener('click',()=>{index=-1;place=story.topic;draw()});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){if(e.repeat||e.target.closest?.('button'))return;e.preventDefault();next()}});
+draw();
+</script></body></html>
