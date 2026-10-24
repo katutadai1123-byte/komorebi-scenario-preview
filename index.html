@@ -35,31 +35,123 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 .scene-note{pointer-events:none}
 .scene-dialog{pointer-events:none}
 @media(max-width:650px){.scene-dialog{left:4%;right:4%;bottom:4%;min-height:25%;padding:30px 19px 26px}.scene-speaker{left:17px}#reader-bar{max-width:100%;left:8px;right:8px;top:8px;justify-content:center}#reader-bar button{font-size:11px;padding:7px 9px}.scene-place{top:52px;left:10px;font-size:12px;padding:8px 10px}}
+
+/* Chapter reader / layered art assets */
+#preview{background:linear-gradient(130deg,#37263e,#1c1a28)}
+.scene-backdrop{position:absolute;inset:0;background:radial-gradient(ellipse at 45% 40%,#594057,#211c28);background-size:cover;background-position:center;z-index:0}
+.scene-backdrop::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,#0b10191a 5%,transparent 32%,#12102045 100%);pointer-events:none}
+.mika-portrait{position:absolute;z-index:1;bottom:-10%;left:50%;transform:translateX(-50%);height:110%;width:auto;max-width:82%;object-fit:contain;object-position:center bottom;pointer-events:none;filter:drop-shadow(0 7px 18px #150e2370)}
+.mika-portrait[hidden]{display:none!important}
+.scene-place{z-index:2;top:60px;left:18px;pointer-events:none}
+#dialog{z-index:5}
+#reader-bar{z-index:14}
+#reader-bar #toc{background:#704b6baa}
+#chapter-menu{position:absolute;inset:0;z-index:15;display:grid;place-items:center;background:#130e1fdc;padding:30px;box-sizing:border-box;cursor:default}
+#chapter-menu[hidden]{display:none}
+.menu-panel{width:min(760px,100%);max-height:82vh;overflow:auto;box-sizing:border-box;padding:22px 26px;background:#32283c;color:#fff;border-radius:18px;border:1px solid #af87a9;box-shadow:0 20px 50px #0007}
+.menu-panel p{color:#e8cddd;font-size:13px}
+.menu-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.menu-head h2{margin:0;font-size:23px}
+#close-menu{background:#513d53;border:1px solid #c6a2bb;color:#fff;padding:10px;border-radius:10px;cursor:pointer}
+#chapter-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:7px;margin-top:15px}
+#chapter-list button{background:#f7e8f0;color:#4a3044;border:1px solid #ddbacf;padding:13px;text-align:left;border-radius:10px;cursor:pointer;font-size:13px}
+#chapter-list button.current{border-color:#c888a6;background:#fbd0e6;font-weight:700}
+#chapter-list button:hover{background:#fff}
+#chapter-list span{display:block;color:#6d4f65;font-size:11px;margin-bottom:5px}
+.scene-note{font-size:13px;z-index:2;background:#22192988;padding:8px 12px;border-radius:9px}
+#preview[data-mode="chapter"] .mika-portrait,#preview[data-mode="intro"] .mika-portrait,#preview[data-mode="end"] .mika-portrait{visibility:hidden}
+@media(max-width:650px){.mika-portrait{height:100%;bottom:4%;max-width:110%}.scene-place{left:8px;top:45px;max-width:65%;font-size:11px}#reader-bar{justify-content:flex-end;left:2px;right:2px}#reader-bar button{font-size:10px;padding:6px 7px}.menu-panel{padding:15px}#chapter-list{grid-template-columns:1fr 1fr;gap:5px}#chapter-list button{padding:10px}.scene-dialog{z-index:5}}
 </style></head>
 <body><div id="preview" role="main" aria-label="ミカ過去編の仮原稿プレビュー" tabindex="0">
-<div class="scene-note">背景・立ち絵は制作中<br><small>原稿のテンポを確認する試作</small></div>
+<div class="scene-backdrop" id="backdrop" aria-hidden="true"></div>
+<img id="mika-portrait" class="mika-portrait" alt="ミカの立ち絵" hidden>
+<div class="scene-note" id="art-note">背景・立ち絵の素材を配置すると表示されます</div>
 <div class="scene-place" id="place"></div>
 <div class="scene-dialog" id="dialog" hidden><div class="scene-speaker" id="speaker"></div><p id="text"></p><div class="scene-progress" id="progress"></div></div>
 <nav id="reader-bar" aria-label="シナリオ再生操作">
 <button id="back" type="button">↺ 最初から</button>
 <button id="auto" type="button" aria-pressed="false">▶ オート</button>
-<button id="skip" type="button" aria-pressed="false">» スキップ</button>
+<button id="skip" type="button" aria-pressed="false">» スキップ</button><button id="toc" type="button">☷ 章一覧</button>
 </nav>
 <div id="chapter" aria-live="polite"><span class="part" id="part"></span><h2 id="chapter-title"></h2><span class="subtitle" id="chapter-subtitle"></span><p class="hint">画面をタップして読み始める</p></div>
+<section id="chapter-menu" hidden role="dialog" aria-modal="true" aria-label="章一覧">
+<div class="menu-panel"><div class="menu-head"><h2>章一覧</h2><button type="button" id="close-menu">× 閉じる</button></div>
+<p>読み直したい章を選択してください。</p><div id="chapter-list"></div></div></section>
 <div id="endcard"><h2>ここまで</h2><p>収録シーンの再生が終わりました。</p><button id="restart" type="button">最初から</button></div>
-<div id="intro"><small>MIKA / PAST ARC · SCENE 01–06 · v2.1</small><h1>ミカ過去編</h1><p>全6章収録 · 章タイトル／オート再生／スキップ対応<br>仮原稿プレビュー（セーブデータへの影響なし）</p><button id="start">イベントを見る ›</button></div>
-</div><script src="./mika_past01_preview.js"></script><script src="./scenes_02_06.js"></script>
+<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19 · v3.0</small><h1>ミカ過去編</h1><p>全19章収録 · 章一覧／オート／スキップ<br>仮原稿プレビュー（セーブデータへの影響なし）</p><button id="start">イベントを見る ›</button></div>
+</div><script src="./mika_past01_preview.js"></script><script src="./scenes_02_06.js"></script><script src="./scenes_07_19.js"></script>
 <script>
 'use strict';
 const el=id=>document.getElementById(id);
 const first=window.KM_MANUSCRIPT_PREVIEWS.mika_past01;
 const chapters=[
-  {number:1,title:first.title,partNumber:'第一部',partTitle:'まだ、何も失っていない',topic:first.topic,lines:first.lines},
-  ...window.KM_MANUSCRIPT_CHAPTERS
+ {number:1,title:first.title,partNumber:'第一部',partTitle:'まだ、何も失っていない',topic:first.topic,lines:first.lines},
+ ...window.KM_MANUSCRIPT_CHAPTERS,
+ ...window.KM_MANUSCRIPT_REMAINING
 ];
-let ci=0,li=0,mode='intro',place='',playing='',timer=null;
-const root=el('preview');
-function cancelAuto(){if(timer!==null){clearTimeout(timer);timer=null}playing='';el('auto').setAttribute('aria-pressed','false');el('skip').setAttribute('aria-pressed','false');el('auto').textContent='▶ オート';el('skip').textContent='» スキップ'}
+if(chapters.length!==19)throw Error('Incomplete past-arc chapters');
+const assets={
+ BG01:'BG01_school_hallway.webp',BG02:'BG02_stadium_evening.webp',
+ BG03:'BG03_locker_entrance.webp',BG04:'BG04_cake_shop_night.webp',
+ BG05:'BG05_mika_bedroom_night.webp',BG06:'BG06_stadium_competition.webp',
+ BG07:'BG07_stadium_exit_dusk.webp',BG08:'BG08_park_evening.webp',
+ BG09:'BG09_hospital_day.webp',BG10:'BG10_cafe_afternoon.webp'
+};
+const portraits={
+ casual:'portrait_mika_casual.webp',
+ athletic:'portrait_mika_athletic.webp',
+ gothic:'portrait_mika_gothic.webp',
+ hospital:'portrait_mika_hospital.webp'
+};
+function stageFor(location){
+ if(location.includes('競技場・更衣'))return 'BG03';
+ if(location.includes('競技場・出口'))return 'BG07';
+ if(location.includes('競技場／大会'))return 'BG06';
+ if(location.includes('競技場'))return 'BG02';
+ if(location.includes('学校'))return 'BG01';
+ if(location.includes('ケーキ店'))return 'BG04';
+ if(location.includes('ミカの部屋'))return 'BG05';
+ if(location.includes('喫茶店'))return 'BG10';
+ if(location.includes('公園'))return 'BG08';
+ if(location.includes('病室'))return 'BG09';
+ return '';
+}
+function portraitFor(n,location){
+ if(n===1)return location.includes('競技場')?'athletic':'gothic';
+ if(n===2)return location.includes('更衣')?'athletic':'gothic';
+ if(n===3)return 'athletic';
+ if(n===4)return 'gothic';
+ if(n===5)return 'hospital';
+ if(n===6)return location.includes('喫茶店')?'casual':'hospital';
+ if(n>=9&&n<=16&&location.includes('病室'))return 'hospital';
+ if(n===17&&location.includes('病室'))return 'hospital';
+ return '';
+}
+let ci=0,li=0,mode='intro',place='',playing='',timer=null,menuOpen=false;
+let lastArtKey='',lastPortrait='';
+const root=el('preview'),backdrop=el('backdrop'),portrait=el('mika-portrait');
+function cancelAuto(){
+ if(timer!==null){clearTimeout(timer);timer=null}
+ playing='';el('auto').setAttribute('aria-pressed','false');el('skip').setAttribute('aria-pressed','false');
+ el('auto').textContent='▶ オート';el('skip').textContent='» スキップ';
+}
+function resetArt(){lastArtKey='';lastPortrait='';backdrop.style.backgroundImage='';portrait.hidden=true;portrait.removeAttribute('src');el('art-note').hidden=false}
+function renderArt(){
+ const n=chapters[ci].number,asset=stageFor(place),p=portraitFor(n,place),key=asset+':'+place;
+ if(key!==lastArtKey){
+   lastArtKey=key;
+   backdrop.style.backgroundImage=asset?'url("./assets/'+assets[asset]+'")':'radial-gradient(ellipse at 50% 35%,#4c3850,#201b2b)';
+   // If not yet uploaded, keep a readable fallback; browser background loading is non-blocking.
+ }
+ if(p!==lastPortrait){
+  lastPortrait=p;portrait.hidden=true;
+  if(p){portrait.src='./assets/'+portraits[p];}
+  else portrait.removeAttribute('src');
+ }
+ el('art-note').hidden=!!asset;
+}
+portrait.addEventListener('load',()=>{portrait.hidden=!lastPortrait});
+portrait.addEventListener('error',()=>{portrait.hidden=true});
 function draw(){
  root.dataset.mode=mode;
  el('intro').style.display=mode==='intro'?'grid':'none';
@@ -67,11 +159,13 @@ function draw(){
  el('endcard').style.display=mode==='end'?'grid':'none';
  el('dialog').hidden=mode!=='line';
  if(mode==='chapter'){
-   const scene=chapters[ci];el('part').textContent=scene.partNumber+'　'+scene.partTitle;
-   el('chapter-title').textContent='第'+scene.number+'章　'+scene.title;
-   el('chapter-subtitle').textContent='MIKA / PAST ARC';return;
+  const scene=chapters[ci];
+  el('part').textContent=scene.partNumber+'　'+scene.partTitle;
+  el('chapter-title').textContent='第'+scene.number+'章　'+scene.title;
+  el('chapter-subtitle').textContent='MIKA / PAST ARC';
+  portrait.hidden=true;return;
  }
- if(mode!=='line')return;
+ if(mode!=='line'){portrait.hidden=true;return}
  const scene=chapters[ci],line=scene.lines[li];
  if(line.place)place=line.place;
  el('place').textContent=place;
@@ -79,44 +173,61 @@ function draw(){
  el('speaker').style.display=line.speaker?'block':'none';
  el('speaker').textContent=line.speaker||'';
  el('text').textContent=line.text||'';
- el('progress').textContent=(ci+1)+' / '+chapters.length+'章　'+(li+1)+' / '+scene.lines.length+'　タップで進む';
+ el('progress').textContent=scene.number+' / '+chapters.length+'章　'+(li+1)+' / '+scene.lines.length+'　タップで進む';
+ renderArt();
 }
 function advance(){
- if(mode==='end'){return}
+ if(menuOpen)return;
+ if(mode==='end')return;
  if(mode==='intro'){mode='chapter';draw();return}
  if(mode==='chapter'){li=0;place=chapters[ci].topic;mode='line';draw();return}
  li++;
- if(li>=chapters[ci].lines.length){cancelAuto();ci++;if(ci>=chapters.length)mode='end';else mode='chapter';draw();return}
+ if(li>=chapters[ci].lines.length){cancelAuto();ci++;if(ci>=chapters.length)mode='end';else mode='chapter';place='';resetArt();draw();return}
  draw();
 }
-function restart(){cancelAuto();ci=0;li=0;place='';mode='intro';draw()}
+function jump(n){cancelAuto();ci=n;li=0;place='';mode='chapter';resetArt();closeMenu();draw()}
+function restart(){cancelAuto();ci=0;li=0;place='';mode='intro';resetArt();draw()}
 function delay(){const line=chapters[ci].lines[li];return Math.min(6500,Math.max(1700,1350+(line.text||'').length*75))}
 function loop(){
- if(!playing||mode!=='line'){cancelAuto();return}
+ if(!playing||mode!=='line'||menuOpen){cancelAuto();return}
  timer=setTimeout(()=>{timer=null;if(mode!=='line'){cancelAuto();return}advance();if(playing&&mode==='line')loop()},playing==='skip'?95:delay());
 }
 function toggle(kind){
- if(mode==='intro'||mode==='end'){return}
+ if(mode==='intro'||mode==='end'||menuOpen)return;
  if(playing===kind){cancelAuto();return}
  cancelAuto();
  if(mode==='chapter')advance();
  if(mode!=='line')return;
  playing=kind;el(kind).setAttribute('aria-pressed','true');
- el(kind).textContent=kind==='auto'?'Ⅱ オート停止':'■ スキップ停止';
- loop();
+ el(kind).textContent=kind==='auto'?'Ⅱ オート停止':'■ スキップ停止';loop();
 }
-root.addEventListener('click',event=>{if(event.target.closest('button'))return;if(playing)cancelAuto();advance()});
+function openMenu(){cancelAuto();menuOpen=true;el('chapter-menu').hidden=false;const buttons=el('chapter-list').querySelectorAll('button');buttons.forEach((button,i)=>button.classList.toggle('current',i===ci))}
+function closeMenu(){menuOpen=false;el('chapter-menu').hidden=true}
+const listing=el('chapter-list');
+chapters.forEach((scene,i)=>{
+ const b=document.createElement('button');b.type='button';
+ const small=document.createElement('span');small.textContent=scene.partNumber+'｜'+scene.partTitle;b.appendChild(small);
+ b.appendChild(document.createTextNode('第'+scene.number+'章　'+scene.title));
+ b.addEventListener('click',event=>{event.stopPropagation();jump(i)});
+ listing.appendChild(b);
+});
+root.addEventListener('click',event=>{if(event.target.closest('button')||menuOpen)return;if(playing)cancelAuto();advance()});
 el('start').addEventListener('click',event=>{event.stopPropagation();advance()});
 el('back').addEventListener('click',event=>{event.stopPropagation();restart()});
 el('restart').addEventListener('click',event=>{event.stopPropagation();restart()});
 el('auto').addEventListener('click',event=>{event.stopPropagation();toggle('auto')});
 el('skip').addEventListener('click',event=>{event.stopPropagation();toggle('skip')});
+el('toc').addEventListener('click',event=>{event.stopPropagation();openMenu()});
+el('close-menu').addEventListener('click',event=>{event.stopPropagation();closeMenu()});
 document.addEventListener('keydown',event=>{
- if(!['Enter',' ','ArrowRight','Escape'].includes(event.key)||event.repeat)return;
- if(event.key==='Escape'){cancelAuto();return}
- if(event.target.closest('button')&&event.key!=='ArrowRight')return;
- event.preventDefault();if(playing)cancelAuto();advance();
+ if(event.repeat)return;
+ if(event.key==='Escape'){if(menuOpen)closeMenu();else cancelAuto();return}
+ if(menuOpen||event.target.closest('button'))return;
+ if(event.key.toLowerCase()==='m'){openMenu();return}
+ if(event.key.toLowerCase()==='a'){toggle('auto');return}
+ if(event.key.toLowerCase()==='s'){toggle('skip');return}
+ if(event.key==='Enter'||event.key===' '||event.key==='ArrowRight'){event.preventDefault();if(playing)cancelAuto();advance()}
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelAuto()});
 draw();
-</script></body></html>
+</script></body></html></html>
