@@ -39,6 +39,8 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 /* Chapter reader / layered art assets */
 #preview{background:linear-gradient(130deg,#37263e,#1c1a28)}
 .scene-backdrop{position:absolute;inset:0;background:radial-gradient(ellipse at 45% 40%,#594057,#211c28);background-size:cover;background-position:center;z-index:0}
+.scene-backdrop img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;pointer-events:none}
+.scene-backdrop img[hidden]{display:none!important}
 .scene-backdrop::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,#0b10191a 5%,transparent 32%,#12102045 100%);pointer-events:none}
 .mika-portrait{position:absolute;z-index:1;bottom:-10%;left:50%;transform:translateX(-50%);height:110%;width:auto;max-width:82%;object-fit:contain;object-position:center bottom;pointer-events:none;filter:drop-shadow(0 7px 18px #150e2370)}
 .mika-portrait[hidden]{display:none!important}
@@ -58,14 +60,14 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 #chapter-list button.current{border-color:#c888a6;background:#fbd0e6;font-weight:700}
 #chapter-list button:hover{background:#fff}
 #chapter-list span{display:block;color:#6d4f65;font-size:11px;margin-bottom:5px}
-.scene-note{font-size:13px;z-index:2;background:#22192988;padding:8px 12px;border-radius:9px}
+.scene-note{font-size:13px;z-index:2;background:#221929dd;padding:10px 15px;border-radius:9px;max-width:75%;text-align:center}
 #preview[data-mode="chapter"] .mika-portrait,#preview[data-mode="intro"] .mika-portrait,#preview[data-mode="end"] .mika-portrait{visibility:hidden}
 @media(max-width:650px){.mika-portrait{height:100%;bottom:4%;max-width:110%}.scene-place{left:8px;top:45px;max-width:65%;font-size:11px}#reader-bar{justify-content:flex-end;left:2px;right:2px}#reader-bar button{font-size:10px;padding:6px 7px}.menu-panel{padding:15px}#chapter-list{grid-template-columns:1fr 1fr;gap:5px}#chapter-list button{padding:10px}.scene-dialog{z-index:5}}
 </style></head>
 <body><div id="preview" role="main" aria-label="ミカ過去編の仮原稿プレビュー" tabindex="0">
-<div class="scene-backdrop" id="backdrop" aria-hidden="true"></div>
+<div class="scene-backdrop" id="backdrop" aria-hidden="true"><img id="scene-bg-img" alt="" hidden></div>
 <img id="mika-portrait" class="mika-portrait" alt="ミカの立ち絵" hidden>
-<div class="scene-note" id="art-note">背景・立ち絵の素材を配置すると表示されます</div>
+<div class="scene-note" id="art-note" hidden></div>
 <div class="scene-place" id="place"></div>
 <div class="scene-dialog" id="dialog" hidden><div class="scene-speaker" id="speaker"></div><p id="text"></p><div class="scene-progress" id="progress"></div></div>
 <nav id="reader-bar" aria-label="シナリオ再生操作">
@@ -78,7 +80,7 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 <div class="menu-panel"><div class="menu-head"><h2>章一覧</h2><button type="button" id="close-menu">× 閉じる</button></div>
 <p>読み直したい章を選択してください。</p><div id="chapter-list"></div></div></section>
 <div id="endcard"><h2>ここまで</h2><p>収録シーンの再生が終わりました。</p><button id="restart" type="button">最初から</button></div>
-<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19 · v3.1</small><h1>ミカ過去編</h1><p>全19章収録 · 章一覧／オート／スキップ<br>仮原稿プレビュー（セーブデータへの影響なし）</p><button id="start">イベントを見る ›</button></div>
+<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19 · v3.2</small><h1>ミカ過去編</h1><p>全19章収録 · 章一覧／オート／スキップ<br>背景・立ち絵は章タイトルをタップした後に表示<br>仮原稿プレビュー（セーブデータへの影響なし）</p><button id="start">イベントを見る ›</button></div>
 </div><script src="./mika_past01_preview.js"></script><script src="./scenes_02_06.js"></script><script src="./scenes_07_19.js"></script>
 <script>
 'use strict';
@@ -133,35 +135,44 @@ function portraitFor(n,location,lineIndex){
 }
 let ci=0,li=0,mode='intro',place='',playing='',timer=null,menuOpen=false;
 let lastArtKey='',lastPortrait='';
-const root=el('preview'),backdrop=el('backdrop'),portrait=el('mika-portrait');
+const root=el('preview'),bgImage=el('scene-bg-img'),portrait=el('mika-portrait'),note=el('art-note');
 function cancelAuto(){
  if(timer!==null){clearTimeout(timer);timer=null}
  playing='';el('auto').setAttribute('aria-pressed','false');el('skip').setAttribute('aria-pressed','false');
  el('auto').textContent='▶ オート';el('skip').textContent='» スキップ';
 }
-function resetArt(){lastArtKey='';lastPortrait='';backdrop.style.backgroundImage='';portrait.hidden=true;portrait.removeAttribute('src');el('art-note').hidden=false}
+function showArtError(message){note.textContent=message;note.hidden=false}
+function resetArt(){
+ lastArtKey='';lastPortrait='';
+ bgImage.hidden=true;bgImage.removeAttribute('src');
+ portrait.hidden=true;portrait.removeAttribute('src');
+ note.hidden=true;
+}
 function renderArt(){
- const n=chapters[ci].number,asset=stageFor(place),p=portraitFor(n,place,li),key=asset+':'+place;
+ const n=chapters[ci].number;
+ const bg=stageFor(place),sprite=portraitFor(n,place,li),key=bg+':'+place;
  if(key!==lastArtKey){
-   lastArtKey=key;
-   backdrop.style.backgroundImage='radial-gradient(ellipse at 50% 35%,#4c3850,#201b2b)';
-   if(asset){
-     const src='./assets/'+assets[asset];
-     const check=new Image();
-     check.onload=()=>{if(lastArtKey===key){backdrop.style.backgroundImage='url("'+src+'")';el('art-note').hidden=true}};
-     check.onerror=()=>{if(lastArtKey===key)el('art-note').hidden=false};
-     check.src=src;
+   lastArtKey=key;bgImage.hidden=true;note.hidden=true;
+   if(bg){
+     const filename=assets[bg];
+     bgImage.onload=()=>{if(lastArtKey===key&&mode==='line'){bgImage.hidden=false;note.hidden=true}};
+     bgImage.onerror=()=>{if(lastArtKey===key)showArtError('背景の読み込みに失敗: '+filename)};
+     bgImage.src='./assets/'+filename;
+   }else{
+     bgImage.removeAttribute('src');
+     showArtError('この場面の背景画像はまだ制作していません');
    }
  }
- if(p!==lastPortrait){
-  lastPortrait=p;portrait.hidden=true;
-  if(p){portrait.src='./assets/'+portraits[p];}
-  else portrait.removeAttribute('src');
+ if(sprite!==lastPortrait){
+   lastPortrait=sprite;portrait.hidden=true;
+   if(sprite){
+     const filename=portraits[sprite];
+     portrait.onload=()=>{if(lastPortrait===sprite&&mode==='line')portrait.hidden=false};
+     portrait.onerror=()=>{if(lastPortrait===sprite)showArtError('立ち絵の読み込みに失敗: '+filename)};
+     portrait.src='./assets/'+filename;
+   }else portrait.removeAttribute('src');
  }
- el('art-note').hidden=!!asset;
 }
-portrait.addEventListener('load',()=>{portrait.hidden=!lastPortrait || mode!=='line'});
-portrait.addEventListener('error',()=>{portrait.hidden=true});
 function draw(){
  root.dataset.mode=mode;
  el('intro').style.display=mode==='intro'?'grid':'none';
@@ -173,9 +184,9 @@ function draw(){
   el('part').textContent=scene.partNumber+'　'+scene.partTitle;
   el('chapter-title').textContent='第'+scene.number+'章　'+scene.title;
   el('chapter-subtitle').textContent='MIKA / PAST ARC';
-  portrait.hidden=true;return;
+  portrait.hidden=true;bgImage.hidden=true;return;
  }
- if(mode!=='line'){portrait.hidden=true;return}
+ if(mode!=='line'){portrait.hidden=true;bgImage.hidden=true;return}
  const scene=chapters[ci],line=scene.lines[li];
  if(line.place)place=line.place;
  el('place').textContent=place;
