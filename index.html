@@ -20,6 +20,7 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 @media(max-height:470px){.scene-dialog{bottom:2%;min-height:30%;padding:23px 24px 10px}.scene-dialog p{font-size:15px}.scene-place{top:3%}}
 
 #reader-bar{position:absolute;z-index:12;top:15px;right:15px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;max-width:74%}
+#reader-bar #back{position:static;top:auto;right:auto;z-index:auto}
 #reader-bar button{background:#32273cca;color:#fff;border:1px solid #eed5e4;border-radius:18px;padding:8px 11px;font-size:12px;cursor:pointer;touch-action:manipulation}
 #reader-bar button[aria-pressed="true"]{background:#bd769e}
 #chapter{position:absolute;inset:0;z-index:7;display:none;place-content:center;text-align:center;background:linear-gradient(145deg,#171621,#533547 60%,#231824);padding:30px}
@@ -46,7 +47,7 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 </nav>
 <div id="chapter" aria-live="polite"><span class="part" id="part"></span><h2 id="chapter-title"></h2><span class="subtitle" id="chapter-subtitle"></span><p class="hint">画面をタップして読み始める</p></div>
 <div id="endcard"><h2>ここまで</h2><p>収録シーンの再生が終わりました。</p><button id="restart" type="button">最初から</button></div>
-<div id="intro"><small>MIKA / PAST ARC · SCENE 01</small><h1>勝敗の行方</h1><p>仮原稿の演出テスト（セーブデータへの影響なし）</p><button id="start">イベントを見る ›</button></div>
+<div id="intro"><small>MIKA / PAST ARC · SCENE 01–06 · v2.1</small><h1>ミカ過去編</h1><p>全6章収録 · 章タイトル／オート再生／スキップ対応<br>仮原稿プレビュー（セーブデータへの影響なし）</p><button id="start">イベントを見る ›</button></div>
 </div><script src="./mika_past01_preview.js"></script><script src="./scenes_02_06.js"></script>
 <script>
 'use strict';
