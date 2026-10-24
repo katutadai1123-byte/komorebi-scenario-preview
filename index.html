@@ -140,8 +140,14 @@ function renderArt(){
  const n=chapters[ci].number,asset=stageFor(place),p=portraitFor(n,place),key=asset+':'+place;
  if(key!==lastArtKey){
    lastArtKey=key;
-   backdrop.style.backgroundImage=asset?'url("./assets/'+assets[asset]+'")':'radial-gradient(ellipse at 50% 35%,#4c3850,#201b2b)';
-   // If not yet uploaded, keep a readable fallback; browser background loading is non-blocking.
+   backdrop.style.backgroundImage='radial-gradient(ellipse at 50% 35%,#4c3850,#201b2b)';
+   if(asset){
+     const src='./assets/'+assets[asset];
+     const check=new Image();
+     check.onload=()=>{if(lastArtKey===key){backdrop.style.backgroundImage='url("'+src+'")';el('art-note').hidden=true}};
+     check.onerror=()=>{if(lastArtKey===key)el('art-note').hidden=false};
+     check.src=src;
+   }
  }
  if(p!==lastPortrait){
   lastPortrait=p;portrait.hidden=true;
@@ -150,7 +156,7 @@ function renderArt(){
  }
  el('art-note').hidden=!!asset;
 }
-portrait.addEventListener('load',()=>{portrait.hidden=!lastPortrait});
+portrait.addEventListener('load',()=>{portrait.hidden=!lastPortrait || mode!=='line'});
 portrait.addEventListener('error',()=>{portrait.hidden=true});
 function draw(){
  root.dataset.mode=mode;
