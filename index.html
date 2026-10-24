@@ -1,4 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><title>こもれび館｜Scene 01 仮原稿テスト</title>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><title>こもれび館｜ミカ過去編 シナリオプレビュー</title>
 <!-- Standalone Pages preview: all styling is self-contained. -->
 <style>
 html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif}
@@ -18,35 +18,104 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 #intro p{font-size:13px;color:#f3dce9}
 #start{margin:24px auto;border:1px solid #fff;background:#bb789c;color:white;border-radius:28px;padding:12px 34px;cursor:pointer}
 @media(max-height:470px){.scene-dialog{bottom:2%;min-height:30%;padding:23px 24px 10px}.scene-dialog p{font-size:15px}.scene-place{top:3%}}
+
+#reader-bar{position:absolute;z-index:12;top:15px;right:15px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;max-width:74%}
+#reader-bar button{background:#32273cca;color:#fff;border:1px solid #eed5e4;border-radius:18px;padding:8px 11px;font-size:12px;cursor:pointer;touch-action:manipulation}
+#reader-bar button[aria-pressed="true"]{background:#bd769e}
+#chapter{position:absolute;inset:0;z-index:7;display:none;place-content:center;text-align:center;background:linear-gradient(145deg,#171621,#533547 60%,#231824);padding:30px}
+#chapter .part{color:#e9becf;font-size:clamp(14px,2vw,19px);letter-spacing:.2em}
+#chapter h2{font-size:clamp(27px,4.8vw,58px);line-height:1.4;margin:25px 0 5px}
+#chapter .subtitle{color:#e5c9d8;letter-spacing:.16em;font-size:clamp(13px,2vw,20px)}
+#chapter .hint{font-size:13px;color:#e8d7e1;margin-top:38px}
+#endcard{position:absolute;inset:0;z-index:9;display:none;place-content:center;background:#241b2d;text-align:center;padding:30px}
+#endcard h2{font-size:32px}
+#endcard button{background:#bb789c;border:1px solid white;color:#fff;padding:12px 24px;border-radius:25px;cursor:pointer}
+#preview[data-mode="chapter"] .scene-note,#preview[data-mode="chapter"] .scene-place,#preview[data-mode="chapter"] .scene-dialog{visibility:hidden}
+.scene-note{pointer-events:none}
+.scene-dialog{pointer-events:none}
+@media(max-width:650px){.scene-dialog{left:4%;right:4%;bottom:4%;min-height:25%;padding:30px 19px 26px}.scene-speaker{left:17px}#reader-bar{max-width:100%;left:8px;right:8px;top:8px;justify-content:center}#reader-bar button{font-size:11px;padding:7px 9px}.scene-place{top:52px;left:10px;font-size:12px;padding:8px 10px}}
 </style></head>
 <body><div id="preview" role="main" aria-label="ミカ過去編の仮原稿プレビュー" tabindex="0">
 <div class="scene-note">背景・立ち絵は制作中<br><small>原稿のテンポを確認する試作</small></div>
 <div class="scene-place" id="place"></div>
 <div class="scene-dialog" id="dialog" hidden><div class="scene-speaker" id="speaker"></div><p id="text"></p><div class="scene-progress" id="progress"></div></div>
-<button id="back" aria-label="最初から再生">↺ 最初から</button>
+<nav id="reader-bar" aria-label="シナリオ再生操作">
+<button id="back" type="button">↺ 最初から</button>
+<button id="auto" type="button" aria-pressed="false">▶ オート</button>
+<button id="skip" type="button" aria-pressed="false">» スキップ</button>
+</nav>
+<div id="chapter" aria-live="polite"><span class="part" id="part"></span><h2 id="chapter-title"></h2><span class="subtitle" id="chapter-subtitle"></span><p class="hint">画面をタップして読み始める</p></div>
+<div id="endcard"><h2>ここまで</h2><p>収録シーンの再生が終わりました。</p><button id="restart" type="button">最初から</button></div>
 <div id="intro"><small>MIKA / PAST ARC · SCENE 01</small><h1>勝敗の行方</h1><p>仮原稿の演出テスト（セーブデータへの影響なし）</p><button id="start">イベントを見る ›</button></div>
-</div><script src="./mika_past01_preview.js"></script>
+</div><script src="./mika_past01_preview.js"></script><script src="./scenes_02_06.js"></script>
 <script>
 'use strict';
-const story=window.KM_MANUSCRIPT_PREVIEWS.mika_past01;
-let index=-1,place=story.topic;
 const el=id=>document.getElementById(id);
+const first=window.KM_MANUSCRIPT_PREVIEWS.mika_past01;
+const chapters=[
+  {number:1,title:first.title,partNumber:'第一部',partTitle:'まだ、何も失っていない',topic:first.topic,lines:first.lines},
+  ...window.KM_MANUSCRIPT_CHAPTERS
+];
+let ci=0,li=0,mode='intro',place='',playing='',timer=null;
+const root=el('preview');
+function cancelAuto(){if(timer!==null){clearTimeout(timer);timer=null}playing='';el('auto').setAttribute('aria-pressed','false');el('skip').setAttribute('aria-pressed','false');el('auto').textContent='▶ オート';el('skip').textContent='» スキップ'}
 function draw(){
- if(index<0){el('intro').hidden=false;el('intro').style.display='grid';el('dialog').hidden=true;el('place').textContent=story.topic;return;}
- el('intro').hidden=true;el('intro').style.display='none';el('dialog').hidden=false;
- if(index>=story.lines.length){index=-1;draw();return}
- const line=story.lines[index];if(line.place)place=line.place;
+ root.dataset.mode=mode;
+ el('intro').style.display=mode==='intro'?'grid':'none';
+ el('chapter').style.display=mode==='chapter'?'grid':'none';
+ el('endcard').style.display=mode==='end'?'grid':'none';
+ el('dialog').hidden=mode!=='line';
+ if(mode==='chapter'){
+   const scene=chapters[ci];el('part').textContent=scene.partNumber+'　'+scene.partTitle;
+   el('chapter-title').textContent='第'+scene.number+'章　'+scene.title;
+   el('chapter-subtitle').textContent='MIKA / PAST ARC';return;
+ }
+ if(mode!=='line')return;
+ const scene=chapters[ci],line=scene.lines[li];
+ if(line.place)place=line.place;
  el('place').textContent=place;
  el('dialog').classList.toggle('narration',!line.speaker);
  el('speaker').style.display=line.speaker?'block':'none';
- el('speaker').textContent=line.speaker;
- el('text').textContent=line.text;
- el('progress').textContent=(index+1)+' / '+story.lines.length+' · タップで進む';
+ el('speaker').textContent=line.speaker||'';
+ el('text').textContent=line.text||'';
+ el('progress').textContent=(ci+1)+' / '+chapters.length+'章　'+(li+1)+' / '+scene.lines.length+'　タップで進む';
 }
-function next(){index++;draw()}
-el('preview').addEventListener('click',e=>{if(e.target.closest('button'))return;next()});
-el('start').addEventListener('click',next);
-el('back').addEventListener('click',()=>{index=-1;place=story.topic;draw()});
-document.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){if(e.repeat||e.target.closest?.('button'))return;e.preventDefault();next()}});
+function advance(){
+ if(mode==='end'){return}
+ if(mode==='intro'){mode='chapter';draw();return}
+ if(mode==='chapter'){li=0;place=chapters[ci].topic;mode='line';draw();return}
+ li++;
+ if(li>=chapters[ci].lines.length){cancelAuto();ci++;if(ci>=chapters.length)mode='end';else mode='chapter';draw();return}
+ draw();
+}
+function restart(){cancelAuto();ci=0;li=0;place='';mode='intro';draw()}
+function delay(){const line=chapters[ci].lines[li];return Math.min(6500,Math.max(1700,1350+(line.text||'').length*75))}
+function loop(){
+ if(!playing||mode!=='line'){cancelAuto();return}
+ timer=setTimeout(()=>{timer=null;if(mode!=='line'){cancelAuto();return}advance();if(playing&&mode==='line')loop()},playing==='skip'?95:delay());
+}
+function toggle(kind){
+ if(mode==='intro'||mode==='end'){return}
+ if(playing===kind){cancelAuto();return}
+ cancelAuto();
+ if(mode==='chapter')advance();
+ if(mode!=='line')return;
+ playing=kind;el(kind).setAttribute('aria-pressed','true');
+ el(kind).textContent=kind==='auto'?'Ⅱ オート停止':'■ スキップ停止';
+ loop();
+}
+root.addEventListener('click',event=>{if(event.target.closest('button'))return;if(playing)cancelAuto();advance()});
+el('start').addEventListener('click',event=>{event.stopPropagation();advance()});
+el('back').addEventListener('click',event=>{event.stopPropagation();restart()});
+el('restart').addEventListener('click',event=>{event.stopPropagation();restart()});
+el('auto').addEventListener('click',event=>{event.stopPropagation();toggle('auto')});
+el('skip').addEventListener('click',event=>{event.stopPropagation();toggle('skip')});
+document.addEventListener('keydown',event=>{
+ if(!['Enter',' ','ArrowRight','Escape'].includes(event.key)||event.repeat)return;
+ if(event.key==='Escape'){cancelAuto();return}
+ if(event.target.closest('button')&&event.key!=='ArrowRight')return;
+ event.preventDefault();if(playing)cancelAuto();advance();
+});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelAuto()});
 draw();
 </script></body></html>
