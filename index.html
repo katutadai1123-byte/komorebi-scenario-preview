@@ -63,11 +63,16 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 .scene-note{font-size:13px;z-index:2;background:#221929dd;padding:10px 15px;border-radius:9px;max-width:75%;text-align:center}
 #preview[data-mode="chapter"] .mika-portrait,#preview[data-mode="intro"] .mika-portrait,#preview[data-mode="end"] .mika-portrait{visibility:hidden}
 @media(max-width:650px){.mika-portrait{height:100%;bottom:4%;max-width:110%}.scene-place{left:8px;top:45px;max-width:65%;font-size:11px}#reader-bar{justify-content:flex-end;left:2px;right:2px}#reader-bar button{font-size:10px;padding:6px 7px}.menu-panel{padding:15px}#chapter-list{grid-template-columns:1fr 1fr;gap:5px}#chapter-list button{padding:10px}.scene-dialog{z-index:5}}
+/* Subtle fade only when the location changes; no extra dialogue pages. */
+#scene-fade{position:absolute;inset:0;z-index:13;background:#211925;opacity:0;pointer-events:none;transition:opacity 260ms ease-in-out}
+#scene-fade.is-visible{opacity:1}
+@media(prefers-reduced-motion:reduce){#scene-fade{transition-duration:0ms}}
 </style></head>
 <body><div id="preview" role="main" aria-label="ミカ過去編の仮原稿プレビュー" tabindex="0">
 <div class="scene-backdrop" id="backdrop" aria-hidden="true"><img id="scene-bg-img" alt="" hidden></div>
 <img id="mika-portrait" class="mika-portrait" alt="ミカの立ち絵" hidden>
 <div class="scene-note" id="art-note" hidden></div>
+<div id="scene-fade" aria-hidden="true"></div>
 <div class="scene-place" id="place"></div>
 <div class="scene-dialog" id="dialog" hidden><div class="scene-speaker" id="speaker"></div><p id="text"></p><div class="scene-progress" id="progress"></div></div>
 <nav id="reader-bar" aria-label="シナリオ再生操作">
@@ -80,7 +85,7 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 <div class="menu-panel"><div class="menu-head"><h2>章一覧</h2><button type="button" id="close-menu">× 閉じる</button></div>
 <p>読み直したい章を選択してください。</p><div id="chapter-list"></div></div></section>
 <div id="endcard"><h2>ここまで</h2><p>収録シーンの再生が終わりました。</p><button id="restart" type="button">最初から</button></div>
-<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19 · v3.3</small><h1>ミカ過去編</h1><p>全19章収録（第1章は改稿全文版）· 章一覧／オート／スキップ<br>背景・立ち絵は章タイトルをタップした後に表示<br>仮原稿プレビュー（セーブデータへの影響なし）</p><button id="start">イベントを見る ›</button></div>
+<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19 · v3.4</small><h1>ミカ過去編</h1><p>全19章収録（第1章は改稿全文版）· 章一覧／オート／スキップ<br>背景・立ち絵は章タイトルをタップした後に表示<br>仮原稿プレビュー（セーブデータへの影響なし）</p><button id="start">イベントを見る ›</button></div>
 </div><script src="./mika_past01_preview.js"></script><script src="./scenes_02_06.js"></script><script src="./scenes_07_19.js"></script>
 <script>
 'use strict';
@@ -134,8 +139,30 @@ function portraitFor(n,location,lineIndex){
  return '';
 }
 let ci=0,li=0,mode='intro',place='',playing='',timer=null,menuOpen=false;
+let transitioning=false,fadeTimer=null;
 let lastArtKey='',lastPortrait='';
-const root=el('preview'),bgImage=el('scene-bg-img'),portrait=el('mika-portrait'),note=el('art-note');
+const root=el('preview'),bgImage=el('scene-bg-img'),portrait=el('mika-portrait'),note=el('art-note'),sceneFade=el('scene-fade');
+const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function clearSceneFade(){
+ if(fadeTimer!==null){clearTimeout(fadeTimer);fadeTimer=null}
+ transitioning=false;sceneFade.classList.remove('is-visible');
+}
+function beginSceneFade(showNext){
+ if(reducedMotion){showNext();if(playing&&mode==='line')loop();return}
+ transitioning=true;sceneFade.classList.add('is-visible');
+ // Fade out → replace the scene while hidden → fade back in.
+ fadeTimer=setTimeout(()=>{
+  fadeTimer=null;showNext();
+  fadeTimer=setTimeout(()=>{
+   fadeTimer=null;sceneFade.classList.remove('is-visible');
+   fadeTimer=setTimeout(()=>{
+    fadeTimer=null;transitioning=false;
+    if(playing&&mode==='line'&&!menuOpen)loop();
+   },260);
+  },40);
+ },260);
+}
+
 function cancelAuto(){
  if(timer!==null){clearTimeout(timer);timer=null}
  playing='';el('auto').setAttribute('aria-pressed','false');el('skip').setAttribute('aria-pressed','false');
@@ -198,20 +225,25 @@ function draw(){
  renderArt();
 }
 function advance(){
- if(menuOpen)return;
+ if(menuOpen||transitioning)return;
  if(mode==='end')return;
  if(mode==='intro'){mode='chapter';draw();return}
  if(mode==='chapter'){li=0;place=chapters[ci].topic;mode='line';draw();return}
+ const next=chapters[ci].lines[li+1];
+ if(next&&next.place&&next.place!==place&&playing!=='skip'){
+  beginSceneFade(()=>{li++;draw()});return;
+ }
  li++;
  if(li>=chapters[ci].lines.length){cancelAuto();ci++;if(ci>=chapters.length)mode='end';else mode='chapter';place='';resetArt();draw();return}
  draw();
 }
-function jump(n){cancelAuto();ci=n;li=0;place='';mode='chapter';resetArt();closeMenu();draw()}
-function restart(){cancelAuto();ci=0;li=0;place='';mode='intro';resetArt();draw()}
+function jump(n){cancelAuto();clearSceneFade();ci=n;li=0;place='';mode='chapter';resetArt();closeMenu();draw()}
+function restart(){cancelAuto();clearSceneFade();ci=0;li=0;place='';mode='intro';resetArt();draw()}
 function delay(){const line=chapters[ci].lines[li];return Math.min(6500,Math.max(1700,1350+(line.text||'').length*75))}
 function loop(){
  if(!playing||mode!=='line'||menuOpen){cancelAuto();return}
- timer=setTimeout(()=>{timer=null;if(mode!=='line'){cancelAuto();return}advance();if(playing&&mode==='line')loop()},playing==='skip'?95:delay());
+ if(transitioning)return;
+ timer=setTimeout(()=>{timer=null;if(mode!=='line'){cancelAuto();return}advance();if(playing&&mode==='line'&&!transitioning)loop()},playing==='skip'?95:delay());
 }
 function toggle(kind){
  if(mode==='intro'||mode==='end'||menuOpen)return;
@@ -222,7 +254,7 @@ function toggle(kind){
  playing=kind;el(kind).setAttribute('aria-pressed','true');
  el(kind).textContent=kind==='auto'?'Ⅱ オート停止':'■ スキップ停止';loop();
 }
-function openMenu(){cancelAuto();menuOpen=true;el('chapter-menu').hidden=false;const buttons=el('chapter-list').querySelectorAll('button');buttons.forEach((button,i)=>button.classList.toggle('current',i===ci))}
+function openMenu(){cancelAuto();clearSceneFade();menuOpen=true;el('chapter-menu').hidden=false;const buttons=el('chapter-list').querySelectorAll('button');buttons.forEach((button,i)=>button.classList.toggle('current',i===ci))}
 function closeMenu(){menuOpen=false;el('chapter-menu').hidden=true}
 const listing=el('chapter-list');
 chapters.forEach((scene,i)=>{
@@ -232,7 +264,7 @@ chapters.forEach((scene,i)=>{
  b.addEventListener('click',event=>{event.stopPropagation();jump(i)});
  listing.appendChild(b);
 });
-root.addEventListener('click',event=>{if(event.target.closest('button')||menuOpen)return;if(playing)cancelAuto();advance()});
+root.addEventListener('click',event=>{if(event.target.closest('button')||menuOpen||transitioning)return;if(playing)cancelAuto();advance()});
 el('start').addEventListener('click',event=>{event.stopPropagation();advance()});
 el('back').addEventListener('click',event=>{event.stopPropagation();restart()});
 el('restart').addEventListener('click',event=>{event.stopPropagation();restart()});
@@ -243,7 +275,7 @@ el('close-menu').addEventListener('click',event=>{event.stopPropagation();closeM
 document.addEventListener('keydown',event=>{
  if(event.repeat)return;
  if(event.key==='Escape'){if(menuOpen)closeMenu();else cancelAuto();return}
- if(menuOpen||event.target.closest('button'))return;
+ if(menuOpen||transitioning||event.target.closest('button'))return;
  if(event.key.toLowerCase()==='m'){openMenu();return}
  if(event.key.toLowerCase()==='a'){toggle('auto');return}
  if(event.key.toLowerCase()==='s'){toggle('skip');return}
