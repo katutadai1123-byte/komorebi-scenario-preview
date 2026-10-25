@@ -63,10 +63,29 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 .scene-note{font-size:13px;z-index:2;background:#221929dd;padding:10px 15px;border-radius:9px;max-width:75%;text-align:center}
 #preview[data-mode="chapter"] .mika-portrait,#preview[data-mode="intro"] .mika-portrait,#preview[data-mode="end"] .mika-portrait{visibility:hidden}
 @media(max-width:650px){.mika-portrait{height:100%;bottom:4%;max-width:110%}.scene-place{left:8px;top:45px;max-width:65%;font-size:11px}#reader-bar{justify-content:flex-end;left:2px;right:2px}#reader-bar button{font-size:10px;padding:6px 7px}.menu-panel{padding:15px}#chapter-list{grid-template-columns:1fr 1fr;gap:5px}#chapter-list button{padding:10px}.scene-dialog{z-index:5}}
-/* Subtle fade only when the location changes; no extra dialogue pages. */
-#scene-fade{position:absolute;inset:0;z-index:13;background:#211925;opacity:0;pointer-events:none;transition:opacity 260ms ease-in-out}
-#scene-fade.is-visible{opacity:1}
-@media(prefers-reduced-motion:reduce){#scene-fade{transition-duration:0ms}}
+/* A single light page sweeps right-to-left over the old scene, then reveals the next.
+   The next scene renders under the fully covering sheet at the halfway point. */
+#scene-fade{
+ position:absolute;top:0;left:0;width:122%;height:100%;z-index:13;
+ pointer-events:none;opacity:0;transform:translateX(100%);
+ background:linear-gradient(102deg,#96758e 0%,#e8dce5 4%,#fff8f6 16%,#fbf5f4 68%,#e4d1e1 94%,#977a9b 100%);
+ clip-path:polygon(3% 0,100% 0,100% 100%,0% 100%);
+ box-shadow:-22px 0 38px #160c2780,16px 0 32px #11091b52;
+ will-change:transform;
+}
+#scene-fade::after{
+ content:"";position:absolute;inset:0 auto 0 0;width:8%;
+ background:linear-gradient(90deg,#46304966,transparent);
+ pointer-events:none;
+}
+#scene-fade.is-visible{opacity:1;animation:page-turn 880ms cubic-bezier(.54,.02,.30,1) both}
+@keyframes page-turn{
+ 0%{transform:translateX(100%) skewY(-1.1deg)}
+ 46%{transform:translateX(-10%) skewY(0deg)}
+ 54%{transform:translateX(-10%) skewY(0deg)}
+ 100%{transform:translateX(-112%) skewY(1.1deg)}
+}
+@media(prefers-reduced-motion:reduce){#scene-fade.is-visible{animation:none;opacity:0}}
 </style></head>
 <body><div id="preview" role="main" aria-label="ミカ過去編の仮原稿プレビュー" tabindex="0">
 <div class="scene-backdrop" id="backdrop" aria-hidden="true"><img id="scene-bg-img" alt="" hidden></div>
@@ -85,7 +104,7 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 <div class="menu-panel"><div class="menu-head"><h2>章一覧</h2><button type="button" id="close-menu">× 閉じる</button></div>
 <p>読み直したい章を選択してください。</p><div id="chapter-list"></div></div></section>
 <div id="endcard"><h2>ここまで</h2><p>収録シーンの再生が終わりました。</p><button id="restart" type="button">最初から</button></div>
-<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19 · v3.4</small><h1>ミカ過去編</h1><p>全19章収録（第1章は改稿全文版）· 章一覧／オート／スキップ<br>背景・立ち絵は章タイトルをタップした後に表示<br>仮原稿プレビュー（セーブデータへの影響なし）</p><button id="start">イベントを見る ›</button></div>
+<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19 · v3.5</small><h1>ミカ過去編</h1><p>全19章収録（第1章は改稿全文版）· 章一覧／オート／スキップ<br>背景・立ち絵は章タイトルをタップした後に表示<br>仮原稿プレビュー（セーブデータへの影響なし）</p><button id="start">イベントを見る ›</button></div>
 </div><script src="./mika_past01_preview.js"></script><script src="./scenes_02_06.js"></script><script src="./scenes_07_19.js"></script>
 <script>
 'use strict';
@@ -150,17 +169,15 @@ function clearSceneFade(){
 function beginSceneFade(showNext){
  if(reducedMotion){showNext();return}
  transitioning=true;sceneFade.classList.add('is-visible');
- // Fade out → replace the scene while hidden → fade back in.
+ // The page completely covers the screen from 46%-54% of the 880ms sweep.
  fadeTimer=setTimeout(()=>{
   fadeTimer=null;showNext();
   fadeTimer=setTimeout(()=>{
    fadeTimer=null;sceneFade.classList.remove('is-visible');
-   fadeTimer=setTimeout(()=>{
-    fadeTimer=null;transitioning=false;
-    if(playing&&mode==='line'&&!menuOpen)loop();
-   },260);
-  },40);
- },260);
+   transitioning=false;
+   if(playing&&mode==='line'&&!menuOpen)loop();
+  },440);
+ },440);
 }
 
 function cancelAuto(){
