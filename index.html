@@ -148,7 +148,7 @@ function clearSceneFade(){
  transitioning=false;sceneFade.classList.remove('is-visible');
 }
 function beginSceneFade(showNext){
- if(reducedMotion){showNext();if(playing&&mode==='line')loop();return}
+ if(reducedMotion){showNext();return}
  transitioning=true;sceneFade.classList.add('is-visible');
  // Fade out → replace the scene while hidden → fade back in.
  fadeTimer=setTimeout(()=>{
