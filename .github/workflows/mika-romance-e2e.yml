@@ -1,8 +1,8 @@
-name: Mika optional romance first-person preview test
+name: Mika dual version romance preview test
 on:
   push:
     branches:
-      - feature/mika-extra-protagonist-pov-v14
+      - feature/mika-dual-romance-modes-v15
   workflow_dispatch:
 jobs:
   test:
