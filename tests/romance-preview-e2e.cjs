@@ -16,7 +16,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
   await page.locator('#romance-toggle').click();
   assert.equal(await page.locator('#romance-toggle').getAttribute('aria-pressed'),'true');
   assert.equal(await page.locator('#extra-demo').isVisible(),true);
-  assert.equal(await page.locator('#chapter-list button').last().isVisible(),true);
+  assert.equal(await page.locator('#chapter-list button').last().getAttribute('hidden'),null); // chapter menu is closed, so isVisible() would be false
   log.push('PASS ONで体験ボタン・追加章が現れる');
   await page.screenshot({path:'test-artifacts/preview-extra-on.png',animations:'disabled'});
   await page.locator('#extra-demo').click();
