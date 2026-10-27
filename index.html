@@ -23,6 +23,7 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 #reader-bar #back{position:static;top:auto;right:auto;z-index:auto}
 #reader-bar button{background:#32273cca;color:#fff;border:1px solid #eed5e4;border-radius:18px;padding:8px 11px;font-size:12px;cursor:pointer;touch-action:manipulation}
 #reader-bar button[aria-pressed="true"]{background:#bd769e}
+#reader-bar button[hidden],#chapter-list button[hidden]{display:none!important}
 #chapter{position:absolute;inset:0;z-index:7;display:none;place-content:center;text-align:center;background:linear-gradient(145deg,#171621,#533547 60%,#231824);padding:30px}
 #chapter .part{color:#e9becf;font-size:clamp(14px,2vw,19px);letter-spacing:.2em}
 #chapter h2{font-size:clamp(27px,4.8vw,58px);line-height:1.4;margin:25px 0 5px}
@@ -109,14 +110,14 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 <nav id="reader-bar" aria-label="シナリオ再生操作">
 <button id="back" type="button">↺ 最初から</button>
 <button id="auto" type="button" aria-pressed="false">▶ オート</button>
-<button id="skip" type="button" aria-pressed="false">» スキップ</button><button id="toc" type="button">☷ 章一覧</button>
+<button id="skip" type="button" aria-pressed="false">» スキップ</button><button id="romance-toggle" type="button" aria-pressed="false" title="任意の追加恋愛イベントの表示を切り替え">♡ 追加OFF</button><button id="extra-demo" type="button" hidden title="未採用の追加恋愛イベント操作サンプルを再生">♡ 体験</button><button id="toc" type="button">☷ 章一覧</button>
 </nav>
 <div id="chapter" aria-live="polite"><span class="part" id="part"></span><h2 id="chapter-title"></h2><span class="subtitle" id="chapter-subtitle"></span><p class="hint">画面をタップして読み始める</p></div>
 <section id="chapter-menu" hidden role="dialog" aria-modal="true" aria-label="章一覧">
 <div class="menu-panel"><div class="menu-head"><h2>章一覧</h2><button type="button" id="close-menu">× 閉じる</button></div>
 <p>読み直したい章を選択してください。</p><div id="chapter-list"></div></div></section>
 <div id="endcard"><h2>ここまで</h2><p>収録シーンの再生が終わりました。</p><button id="restart" type="button">最初から</button></div>
-<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19 · v07</small><h1>ミカ過去編</h1><p>全19章収録（第1・2章は選択肢付きVer.07）· 章一覧／オート／スキップ<br>背景・立ち絵は章タイトルをタップした後に表示<br>仮原稿プレビュー（セーブデータへの影響なし）</p><button id="start">イベントを見る ›</button></div>
+<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19 · v07</small><h1>ミカ過去編</h1><p>全19章収録（第1・2章は選択肢付きVer.07）· 章一覧／オート／スキップ<br>背景・立ち絵は章タイトルをタップした後に表示<br>仮原稿プレビュー（セーブデータへの影響なし）<br>「♡ 追加OFF」をONにすると、独立した追加イベントの操作サンプルを体験できます</p><button id="start">イベントを見る ›</button></div>
 </div><script src="./mika_past01_preview.js"></script><script src="./scenes_02_06.js"></script><script src="./scenes_07_19.js"></script><script src="./mika_scenes_01_02_choices_v07.js"></script>
 <script>
 'use strict';
@@ -128,6 +129,20 @@ const chapters=[
  ...window.KM_MANUSCRIPT_REMAINING
 ];
 if(chapters.length!==19)throw Error('Incomplete past-arc chapters');
+// 通常19章とは完全に独立した、表示切替の動作確認用サンプル。採用原稿ではない。
+const regularChapterCount=chapters.length;
+const romanceSampleIndex=regularChapterCount;
+chapters.push({
+ number:20,kind:'romance_extra',title:'恋人の時間（操作サンプル）',
+ partNumber:'追加恋愛イベント',partTitle:'本編未採用・表示切替の動作確認',
+ topic:'公園／夕方',lines:[
+ {speaker:'',text:'【追加恋愛イベント／動作確認用】この会話はゲーム内でのON/OFFを試すための仮テキストです。採用済みのシナリオではありません。',place:'公園／夕方'},
+ {speaker:'陽奈子',text:'……あの、もう少しだけ、隣にいてもいいですか？'},
+ {speaker:'主人公',text:'ほう。俺の隣がそんなに気に入ったのか？'},
+ {speaker:'陽奈子',text:'はい。……だって、今は私が彼女ですから。'},
+ {speaker:'',text:'彼女は少し照れたように笑って、そっと彼の袖をつまんだ。'},
+ {speaker:'',text:'【体験終了】OFFではこの追加イベントは章一覧から消え、通常の19章だけが再生されます。'}
+ ]});
 const chapterTemplates=chapters.map(chapter=>chapter.lines.slice());
 function resetChapter(index){chapters[index].lines=chapterTemplates[index].slice()}
 function resetAllChapters(){chapters.forEach((_,index)=>resetChapter(index))}
@@ -172,6 +187,8 @@ function portraitFor(n,location,lineIndex){
  if(n===17&&location.includes('病室'))return 'hospital';
  return '';
 }
+const ROMANCE_PREF_KEY='komorebi_scenario_romance_extra_v1';
+let romanceExtraEnabled=(()=>{try{return localStorage.getItem(ROMANCE_PREF_KEY)==='on'}catch(_){return false}})();
 let ci=0,li=0,mode='intro',place='',playing='',timer=null,menuOpen=false;
 let transitioning=false,fadeTimer=null;
 let lastArtKey='',lastPortrait='';
@@ -260,8 +277,8 @@ function draw(){
  if(mode==='chapter'){
   const scene=chapters[ci];
   el('part').textContent=scene.partNumber+'　'+scene.partTitle;
-  el('chapter-title').textContent='第'+scene.number+'章　'+scene.title;
-  el('chapter-subtitle').textContent='MIKA / PAST ARC';
+  el('chapter-title').textContent=scene.kind==='romance_extra'?'追加イベント体験　'+scene.title:'第'+scene.number+'章　'+scene.title;
+  el('chapter-subtitle').textContent=scene.kind==='romance_extra'?'OPTIONAL / SAMPLE ONLY':'MIKA / PAST ARC';
   portrait.hidden=true;bgImage.hidden=true;return;
  }
  if(mode!=='line'){portrait.hidden=true;bgImage.hidden=true;return}
@@ -282,7 +299,7 @@ function draw(){
  el('speaker').style.display=line.speaker?'block':'none';
  el('speaker').textContent=line.speaker||'';
  el('text').textContent=line.text||'';
- el('progress').textContent=scene.number+' / '+chapters.length+'章　'+(li+1)+' / '+scene.lines.length+'　タップで進む';
+ el('progress').textContent=(scene.kind==='romance_extra'?'追加イベント・サンプル':scene.number+' / '+regularChapterCount+'章')+'　'+(li+1)+' / '+scene.lines.length+'　タップで進む';
  renderArt();
 }
 function advance(){
@@ -296,7 +313,7 @@ function advance(){
   beginSceneFade(()=>{li++;draw()});return;
  }
  li++;
- if(li>=chapters[ci].lines.length){cancelAuto();ci++;if(ci>=chapters.length)mode='end';else mode='chapter';place='';resetArt();draw();return}
+ if(li>=chapters[ci].lines.length){cancelAuto();if(ci>=regularChapterCount-1){mode='end'}else{ci++;mode='chapter'}place='';resetArt();draw();return}
  draw();
 }
 function jump(n){cancelAuto();clearSceneFade();resetAllChapters();ci=n;li=0;place='';mode='chapter';resetArt();closeMenu();draw()}
@@ -316,13 +333,26 @@ function toggle(kind){
  playing=kind;el(kind).setAttribute('aria-pressed','true');
  el(kind).textContent=kind==='auto'?'Ⅱ オート停止':'■ スキップ停止';loop();
 }
+function setRomanceExtra(enabled){
+ romanceExtraEnabled=Boolean(enabled);
+ try{localStorage.setItem(ROMANCE_PREF_KEY,romanceExtraEnabled?'on':'off')}catch(_){}
+ const toggleButton=el('romance-toggle');
+ toggleButton.setAttribute('aria-pressed',String(romanceExtraEnabled));
+ toggleButton.textContent='♡ 追加'+(romanceExtraEnabled?'ON':'OFF');
+ el('extra-demo').hidden=!romanceExtraEnabled;
+ const extraButton=el('chapter-list').querySelectorAll('button')[romanceSampleIndex];
+ if(extraButton)extraButton.hidden=!romanceExtraEnabled;
+ if(!romanceExtraEnabled&&ci===romanceSampleIndex){
+  cancelAuto();clearSceneFade();ci=regularChapterCount-1;mode='end';place='';resetArt();draw();
+ }
+}
 function openMenu(){cancelAuto();clearSceneFade();menuOpen=true;el('chapter-menu').hidden=false;const buttons=el('chapter-list').querySelectorAll('button');buttons.forEach((button,i)=>button.classList.toggle('current',i===ci))}
 function closeMenu(){menuOpen=false;el('chapter-menu').hidden=true}
 const listing=el('chapter-list');
 chapters.forEach((scene,i)=>{
  const b=document.createElement('button');b.type='button';
  const small=document.createElement('span');small.textContent=scene.partNumber+'｜'+scene.partTitle;b.appendChild(small);
- b.appendChild(document.createTextNode('第'+scene.number+'章　'+scene.title));
+ b.appendChild(document.createTextNode(scene.kind==='romance_extra'?'♡ 追加イベント体験　'+scene.title:'第'+scene.number+'章　'+scene.title));
  b.addEventListener('click',event=>{event.stopPropagation();jump(i)});
  listing.appendChild(b);
 });
@@ -333,6 +363,8 @@ el('restart').addEventListener('click',event=>{event.stopPropagation();restart()
 el('auto').addEventListener('click',event=>{event.stopPropagation();toggle('auto')});
 el('skip').addEventListener('click',event=>{event.stopPropagation();toggle('skip')});
 el('toc').addEventListener('click',event=>{event.stopPropagation();openMenu()});
+el('romance-toggle').addEventListener('click',event=>{event.stopPropagation();setRomanceExtra(!romanceExtraEnabled)});
+el('extra-demo').addEventListener('click',event=>{event.stopPropagation();if(romanceExtraEnabled)jump(romanceSampleIndex)});
 el('close-menu').addEventListener('click',event=>{event.stopPropagation();closeMenu()});
 document.addEventListener('keydown',event=>{
  if(event.repeat)return;
@@ -344,5 +376,6 @@ document.addEventListener('keydown',event=>{
  if(event.key==='Enter'||event.key===' '||event.key==='ArrowRight'){event.preventDefault();if(playing)cancelAuto();advance()}
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelAuto()});
+setRomanceExtra(romanceExtraEnabled);
 draw();
 </script></body></html></html>
