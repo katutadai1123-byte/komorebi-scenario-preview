@@ -1,8 +1,8 @@
-name: Mika optional adult romance preview test
+name: Mika optional romance first-person preview test
 on:
   push:
     branches:
-      - feature/mika-extra-scene03-20261027
+      - feature/mika-extra-protagonist-pov-v14
   workflow_dispatch:
 jobs:
   test:
