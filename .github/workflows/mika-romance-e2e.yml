@@ -1,8 +1,8 @@
-name: Mika dual version romance preview test
+name: Mika selected version preview test
 on:
   push:
     branches:
-      - feature/mika-dual-romance-modes-v15
+      - feature/select-allages-or-r18-at-start-20261027
   workflow_dispatch:
 jobs:
   test:
