@@ -125,8 +125,8 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 <div class="menu-panel"><div class="menu-head"><h2>章一覧</h2><button type="button" id="close-menu">× 閉じる</button></div>
 <p>読み直したい章を選択してください。</p><div id="chapter-list"></div></div></section>
 <div id="endcard"><h2>ここまで</h2><p>収録シーンの再生が終わりました。</p><button id="restart" type="button">最初から</button></div>
-<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19</small><h1>ミカ過去編</h1><p>プレイするバージョンを選んでください。<br>全年齢版は主人公視点、R-18版はミカ視点の「勝者の夜」を収録しています。<br>その他の19章は共通です。</p><div class="version-select" role="group" aria-label="プレイするバージョン"><button id="start-allages" type="button">全年齢版で始める</button><button id="start-r18" type="button">R-18版で始める</button></div><p class="age-note">R-18版には具体的な性的表現が含まれます。18歳以上の方のみ選択してください。</p></div>
-</div><script src="./mika_past01_preview.js"></script><script src="./scenes_02_06.js"></script><script src="./scenes_07_19.js"></script><script src="./mika_scenes_01_02_choices_v07.js"></script><script src="./romance_mika_scene03_extra.js"></script><script src="./romance_mika_scene03_extra_r18.js"></script>
+<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19</small><h1>ミカ過去編</h1><p>プレイするバージョンを選んでください。<br>全年齢版は主人公視点、R-18版では「勝者の夜」とScene 03.5の試着室にミカ視点の成人版描写があります。<br>その他の場面は共通です。</p><div class="version-select" role="group" aria-label="プレイするバージョン"><button id="start-allages" type="button">全年齢版で始める</button><button id="start-r18" type="button">R-18版で始める</button></div><p class="age-note">R-18版には具体的な性的表現が含まれます。18歳以上の方のみ選択してください。</p></div>
+</div><script src="./mika_past01_preview.js"></script><script src="./scenes_02_06.js"></script><script src="./scenes_07_19.js"></script><script src="./mika_scenes_01_02_choices_v07.js"></script><script src="./romance_mika_scene03_extra.js"></script><script src="./romance_mika_scene03_extra_r18.js"></script><script src="./scene03_5_preview.js"></script>
 <script>
 'use strict';
 const el=id=>document.getElementById(id);
@@ -143,11 +143,15 @@ const romanceSampleIndex=regularChapterCount;
 const sourceExtra=window.KM_MIKA_SCENE03_EXTRA; // 全年齢／主人公視点 Ver.14
 const sourceExtraR18=window.KM_MIKA_SCENE03_EXTRA_R18; // 作者提供原文 Ver.13
 if(!sourceExtra || !sourceExtraR18 || ![sourceExtra,sourceExtraR18].every(x=>x.kind==='romance_extra' && Array.isArray(x.lines)))throw Error('Dual optional romance scripts not loaded');
+const source035=window.KM_SCENE035;
+if(!source035||!Array.isArray(source035.allages)||!Array.isArray(source035.r18))throw Error('Scene 03.5 scripts not loaded');
 chapters.push({
  number:20,kind:'romance_extra',title:'勝者の夜',
  partNumber:'Scene 03 分岐',partTitle:'ミカ過去編 Scene 03 第5場面の直後／全年齢・主人公視点',
  topic:'主人公の部屋／夜',lines:sourceExtra.lines.slice()
 });
+const scene035Index=chapters.length;
+chapters.push({number:3.5,kind:'scene035',title:source035.title,partNumber:'第一部',partTitle:'まだ、何も失っていない',topic:source035.topic,lines:source035.allages.slice()});
 const chapterTemplates=chapters.map(chapter=>chapter.lines.slice());
 function resetChapter(index){chapters[index].lines=chapterTemplates[index].slice()}
 function resetAllChapters(){chapters.forEach((_,index)=>resetChapter(index))}
@@ -191,7 +195,7 @@ function portraitFor(n,location,lineIndex){
  if(n>=9&&n<=16&&location.includes('病室'))return 'hospital';
  if(n===17&&location.includes('病室'))return 'hospital';
  // Optional first-person scene is in the protagonist's room; no existing portrait applies.
- if(n===20)return '';
+ if(n===20||n===3.5)return '';
  return '';
 }
 // バージョンは毎回タイトルで明示的に選ぶ。旧ON/OFF設定やR-18選択は自動継承しない。
@@ -284,8 +288,8 @@ function draw(){
  if(mode==='chapter'){
   const scene=chapters[ci];
   el('part').textContent=scene.partNumber+'　'+scene.partTitle;
-  el('chapter-title').textContent=scene.kind==='romance_extra'?'Scene 03 分岐　'+scene.title:'第'+scene.number+'章　'+scene.title;
-  el('chapter-subtitle').textContent=scene.kind==='romance_extra'?(romanceMode==='r18'?'MIKA POV / R-18':'PROTAGONIST POV / ALL AGES'):'MIKA / PAST ARC';
+  el('chapter-title').textContent=scene.kind==='romance_extra'?'Scene 03 分岐　'+scene.title:scene.kind==='scene035'?'Scene 03.5　'+scene.title:'第'+scene.number+'章　'+scene.title;
+  el('chapter-subtitle').textContent=scene.kind==='romance_extra'?(romanceMode==='r18'?'MIKA POV / R-18':'PROTAGONIST POV / ALL AGES'):scene.kind==='scene035'?(romanceMode==='r18'?'ALL AGES + R-18 INSERT / MIKA POV':'ALL AGES / PROTAGONIST POV'):'MIKA / PAST ARC';
   portrait.hidden=true;bgImage.hidden=true;return;
  }
  if(mode!=='line'){portrait.hidden=true;bgImage.hidden=true;return}
@@ -306,7 +310,7 @@ function draw(){
  el('speaker').style.display=line.speaker?'block':'none';
  el('speaker').textContent=line.speaker||'';
  el('text').textContent=line.text||'';
- el('progress').textContent=(scene.kind==='romance_extra'?'Scene 03・'+(romanceMode==='r18'?'R-18':'全年齢'):scene.number+' / '+regularChapterCount+'章')+'　'+(li+1)+' / '+scene.lines.length+'　タップで進む';
+ el('progress').textContent=(scene.kind==='romance_extra'?'Scene 03・'+(romanceMode==='r18'?'R-18':'全年齢'):scene.kind==='scene035'?'Scene 03.5・'+(romanceMode==='r18'?'R-18':'全年齢'):scene.number+' / '+regularChapterCount+'章')+'　'+(li+1)+' / '+scene.lines.length+'　タップで進む';
  renderArt();
 }
 function advance(){
@@ -323,7 +327,8 @@ function advance(){
  if(li>=chapters[ci].lines.length){
   cancelAuto();
   if(ci===2){ci=romanceSampleIndex;mode='chapter';}
-  else if(ci===romanceSampleIndex){ci=3;mode='chapter';}
+  else if(ci===romanceSampleIndex){ci=scene035Index;mode='chapter';}
+   else if(ci===scene035Index){ci=3;mode='chapter';}
   else if(ci>=regularChapterCount-1){mode='end';}
   else{ci++;mode='chapter';}
   place='';resetArt();draw();return
@@ -358,6 +363,10 @@ function selectVersion(next){
  extra.topic=next==='r18'?'ミカの部屋／夜':'主人公の部屋／夜';
  extra.lines=data.lines.slice();
  chapterTemplates[romanceSampleIndex]=data.lines.slice();
+  const boutique=chapters[scene035Index];
+  const boutiqueLines=(next==='r18'?source035.r18:source035.allages).slice();
+  boutique.lines=boutiqueLines;
+  chapterTemplates[scene035Index]=boutiqueLines.slice();
  const extraButton=el('chapter-list').querySelectorAll('button')[romanceSampleIndex];
  if(extraButton)extraButton.querySelector('span').textContent='Scene 03 分岐｜'+(next==='r18'?'R-18・ミカ視点':'全年齢・主人公視点');
  mode='chapter';ci=0;li=0;place='';resetArt();draw(); // intro -> Scene 01の章カード
@@ -368,7 +377,7 @@ const listing=el('chapter-list');
 chapters.forEach((scene,i)=>{
  const b=document.createElement('button');b.type='button';
  const small=document.createElement('span');small.textContent=scene.partNumber+'｜'+scene.partTitle;b.appendChild(small);
- b.appendChild(document.createTextNode(scene.kind==='romance_extra'?'Scene 03 分岐　'+scene.title:'第'+scene.number+'章　'+scene.title));
+ b.appendChild(document.createTextNode(scene.kind==='romance_extra'?'Scene 03 分岐　'+scene.title:scene.kind==='scene035'?'Scene 03.5　'+scene.title:'第'+scene.number+'章　'+scene.title));
  b.addEventListener('click',event=>{event.stopPropagation();jump(i)});
  listing.appendChild(b);
 });
