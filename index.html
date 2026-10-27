@@ -126,7 +126,7 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 <p>読み直したい章を選択してください。</p><div id="chapter-list"></div></div></section>
 <div id="endcard"><h2>ここまで</h2><p>収録シーンの再生が終わりました。</p><button id="restart" type="button">最初から</button></div>
 <div id="intro"><small>MIKA / PAST ARC · SCENE 01–19</small><h1>ミカ過去編</h1><p>プレイするバージョンを選んでください。<br>全年齢版は主人公視点、R-18版では「勝者の夜」とScene 03.5の試着室にミカ視点の成人版描写があります。<br>その他の場面は共通です。</p><div class="version-select" role="group" aria-label="プレイするバージョン"><button id="start-allages" type="button">全年齢版で始める</button><button id="start-r18" type="button">R-18版で始める</button></div><p class="age-note">R-18版には具体的な性的表現が含まれます。18歳以上の方のみ選択してください。</p></div>
-</div><script src="./mika_past01_preview.js"></script><script src="./scenes_02_06.js"></script><script src="./scenes_07_19.js"></script><script src="./mika_scenes_01_02_choices_v07.js"></script><script src="./romance_mika_scene03_extra.js"></script><script src="./romance_mika_scene03_extra_r18.js"></script><script src="./scene03_5_preview.js"></script>
+</div><script src="./mika_past01_preview.js"></script><script src="./scenes_02_06.js"></script><script src="./scenes_07_19.js"></script><script src="./mika_scenes_01_02_choices_v07.js"></script><script src="./romance_mika_scene03_extra.js"></script><script src="./romance_mika_scene03_extra_r18.js"></script><script src="./scene03_5_preview.js"></script><script src="./scene03_5_fifth_preview.js"></script>
 <script>
 'use strict';
 const el=id=>document.getElementById(id);
@@ -369,6 +369,11 @@ function selectVersion(next){
   chapterTemplates[scene035Index]=boutiqueLines.slice();
  const extraButton=el('chapter-list').querySelectorAll('button')[romanceSampleIndex];
  if(extraButton)extraButton.querySelector('span').textContent='Scene 03 分岐｜'+(next==='r18'?'R-18・ミカ視点':'全年齢・主人公視点');
+ if(window.location.hash==='#scene035-fifth'){
+  const fifthStart=boutique.lines.findIndex(line=>line.text==='― 第五場面 ―');
+  if(fifthStart<0)throw Error('Scene 03.5 fifth scene missing');
+  mode='line';ci=scene035Index;li=fifthStart;place='公園・噴水広場／夕方';resetArt();draw();return;
+ }
  mode='chapter';ci=0;li=0;place='';resetArt();draw(); // intro -> Scene 01の章カード
 }
 function openMenu(){cancelAuto();clearSceneFade();menuOpen=true;el('chapter-menu').hidden=false;const buttons=el('chapter-list').querySelectorAll('button');buttons.forEach((button,i)=>button.classList.toggle('current',i===ci))}
@@ -381,6 +386,19 @@ chapters.forEach((scene,i)=>{
  b.addEventListener('click',event=>{event.stopPropagation();jump(i)});
  listing.appendChild(b);
 });
+// Scene 03.5 の第五場面を章一覧から直接再生できるようにする。
+const fifthShortcut=document.createElement('button');
+fifthShortcut.type='button';
+const fifthSmall=document.createElement('span');fifthSmall.textContent='第一部｜まだ、何も失っていない';
+fifthShortcut.appendChild(fifthSmall);
+fifthShortcut.appendChild(document.createTextNode('Scene 03.5　第五場面'));
+fifthShortcut.addEventListener('click',event=>{
+ event.stopPropagation();jump(scene035Index);
+ const fifthStart=chapters[scene035Index].lines.findIndex(line=>line.text==='― 第五場面 ―');
+ if(fifthStart<0)throw Error('Scene 03.5 fifth scene missing');
+ li=fifthStart;place='公園・噴水広場／夕方';mode='line';draw();
+});
+listing.appendChild(fifthShortcut);
 root.addEventListener('click',event=>{if(event.target.closest('button')||menuOpen||transitioning)return;if(playing)cancelAuto();advance()});
 el('start-allages').addEventListener('click',event=>{event.stopPropagation();selectVersion('allages')});
 el('start-r18').addEventListener('click',event=>{event.stopPropagation();selectVersion('r18')});
