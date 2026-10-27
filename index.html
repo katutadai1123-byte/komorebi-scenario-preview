@@ -16,7 +16,14 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 #intro h1{font-size:clamp(25px,4vw,50px);margin:10px}
 #intro small{letter-spacing:.2em;color:#ecbdd5}
 #intro p{font-size:13px;color:#f3dce9}
-#start{margin:24px auto;border:1px solid #fff;background:#bb789c;color:white;border-radius:28px;padding:12px 34px;cursor:pointer}
+#intro{padding:24px;box-sizing:border-box}
+#intro p{line-height:1.8}
+.version-select{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin:18px auto 8px}
+.version-select button{min-width:185px;min-height:52px;padding:13px 22px;border-radius:14px;border:1px solid #fff;color:#fff;font-weight:700;background:#a86790;cursor:pointer;touch-action:manipulation}
+.version-select #start-r18{background:#4b3b55}
+.version-select button:focus-visible{outline:3px solid #fff0a9;outline-offset:3px}
+#intro .age-note{font-size:12px;color:#e7c7d5}
+@media(max-height:470px){#intro h1{font-size:clamp(23px,3.4vw,35px)}#intro p{font-size:11px;line-height:1.5}.version-select{margin:9px auto 4px}.version-select button{min-height:39px;padding:7px 16px}}
 @media(max-height:470px){.scene-dialog{bottom:2%;min-height:30%;padding:23px 24px 10px}.scene-dialog p{font-size:15px}.scene-place{top:3%}}
 
 #reader-bar{position:absolute;z-index:12;top:15px;right:15px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;max-width:74%}
@@ -24,6 +31,7 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 #reader-bar button{background:#32273cca;color:#fff;border:1px solid #eed5e4;border-radius:18px;padding:8px 11px;font-size:12px;cursor:pointer;touch-action:manipulation}
 #reader-bar button[aria-pressed="true"]{background:#bd769e}
 #reader-bar button[hidden],#chapter-list button[hidden]{display:none!important}
+#preview[data-mode="intro"] #reader-bar{display:none}
 #chapter{position:absolute;inset:0;z-index:7;display:none;place-content:center;text-align:center;background:linear-gradient(145deg,#171621,#533547 60%,#231824);padding:30px}
 #chapter .part{color:#e9becf;font-size:clamp(14px,2vw,19px);letter-spacing:.2em}
 #chapter h2{font-size:clamp(27px,4.8vw,58px);line-height:1.4;margin:25px 0 5px}
@@ -108,16 +116,16 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 <div class="scene-dialog" id="dialog" hidden><div class="scene-speaker" id="speaker"></div><p id="text"></p><div class="scene-progress" id="progress"></div></div>
 <section id="choice-overlay" hidden role="group" aria-label="主人公の返答を選ぶ"><p class="choice-hint">返答を選んでください</p><div id="choice-list"></div></section>
 <nav id="reader-bar" aria-label="シナリオ再生操作">
-<button id="back" type="button">↺ 最初から</button>
+<button id="back" type="button">↺ タイトルへ</button>
 <button id="auto" type="button" aria-pressed="false">▶ オート</button>
-<button id="skip" type="button" aria-pressed="false">» スキップ</button><button id="romance-toggle" type="button" aria-pressed="false" title="押すたびに追加OFF→全年齢→R-18を切り替えます">♡ 追加OFF</button><button id="extra-demo" type="button" hidden title="選択中の追加恋愛イベントを再生">♡ ミカ追加</button><button id="toc" type="button">☷ 章一覧</button>
+<button id="skip" type="button" aria-pressed="false">» スキップ</button><button id="toc" type="button">☷ 章一覧</button>
 </nav>
 <div id="chapter" aria-live="polite"><span class="part" id="part"></span><h2 id="chapter-title"></h2><span class="subtitle" id="chapter-subtitle"></span><p class="hint">画面をタップして読み始める</p></div>
 <section id="chapter-menu" hidden role="dialog" aria-modal="true" aria-label="章一覧">
 <div class="menu-panel"><div class="menu-head"><h2>章一覧</h2><button type="button" id="close-menu">× 閉じる</button></div>
 <p>読み直したい章を選択してください。</p><div id="chapter-list"></div></div></section>
 <div id="endcard"><h2>ここまで</h2><p>収録シーンの再生が終わりました。</p><button id="restart" type="button">最初から</button></div>
-<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19 · v07</small><h1>ミカ過去編</h1><p>全19章収録（第1・2章は選択肢付きVer.07）· 章一覧／オート／スキップ<br>背景・立ち絵は章タイトルをタップした後に表示<br>仮原稿プレビュー（セーブデータへの影響なし）<br>追加恋愛イベントのモードは「追加OFF → 全年齢（主人公視点） → R-18（ミカ視点）」の順に切り替わります。R-18は成人向けで、18歳以上の方のみ選択してください。原稿は本編19章と独立しています。</p><button id="start">イベントを見る ›</button></div>
+<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19</small><h1>ミカ過去編</h1><p>プレイするバージョンを選んでください。<br>全年齢版は主人公視点、R-18版はミカ視点の「勝者の夜」を収録しています。<br>その他の19章は共通です。</p><div class="version-select" role="group" aria-label="プレイするバージョン"><button id="start-allages" type="button">全年齢版で始める</button><button id="start-r18" type="button">R-18版で始める</button></div><p class="age-note">R-18版には具体的な性的表現が含まれます。18歳以上の方のみ選択してください。</p></div>
 </div><script src="./mika_past01_preview.js"></script><script src="./scenes_02_06.js"></script><script src="./scenes_07_19.js"></script><script src="./mika_scenes_01_02_choices_v07.js"></script><script src="./romance_mika_scene03_extra.js"></script><script src="./romance_mika_scene03_extra_r18.js"></script>
 <script>
 'use strict';
@@ -129,7 +137,7 @@ const chapters=[
  ...window.KM_MANUSCRIPT_REMAINING
 ];
 if(chapters.length!==19)throw Error('Incomplete past-arc chapters');
-// Scene 03の最後の場面に続く、作者提供の任意イベント。元の19章は未改変。
+// Scene 03の末尾で選択したバージョンに分岐。通常の19章は共通。
 const regularChapterCount=chapters.length;
 const romanceSampleIndex=regularChapterCount;
 const sourceExtra=window.KM_MIKA_SCENE03_EXTRA; // 全年齢／主人公視点 Ver.14
@@ -137,7 +145,7 @@ const sourceExtraR18=window.KM_MIKA_SCENE03_EXTRA_R18; // 作者提供原文 Ver
 if(!sourceExtra || !sourceExtraR18 || ![sourceExtra,sourceExtraR18].every(x=>x.kind==='romance_extra' && Array.isArray(x.lines)))throw Error('Dual optional romance scripts not loaded');
 chapters.push({
  number:20,kind:'romance_extra',title:'勝者の夜',
- partNumber:'追加恋愛イベント',partTitle:'ミカ過去編 Scene 03 第5場面の直後／全年齢・主人公視点',
+ partNumber:'Scene 03 分岐',partTitle:'ミカ過去編 Scene 03 第5場面の直後／全年齢・主人公視点',
  topic:'主人公の部屋／夜',lines:sourceExtra.lines.slice()
 });
 const chapterTemplates=chapters.map(chapter=>chapter.lines.slice());
@@ -186,11 +194,8 @@ function portraitFor(n,location,lineIndex){
  if(n===20)return '';
  return '';
 }
-const ROMANCE_PREF_KEY='komorebi_scenario_romance_mode_v4';
-let romanceMode=(()=>{try{
- const value=localStorage.getItem(ROMANCE_PREF_KEY);
- return ['off','allages','r18'].includes(value)?value:'off';
-}catch(_){return 'off'}})();
+// バージョンは毎回タイトルで明示的に選ぶ。旧ON/OFF設定やR-18選択は自動継承しない。
+let romanceMode=null;
 let ci=0,li=0,mode='intro',place='',playing='',timer=null,menuOpen=false;
 let transitioning=false,fadeTimer=null;
 let lastArtKey='',lastPortrait='';
@@ -279,7 +284,7 @@ function draw(){
  if(mode==='chapter'){
   const scene=chapters[ci];
   el('part').textContent=scene.partNumber+'　'+scene.partTitle;
-  el('chapter-title').textContent=scene.kind==='romance_extra'?'追加恋愛イベント　'+scene.title:'第'+scene.number+'章　'+scene.title;
+  el('chapter-title').textContent=scene.kind==='romance_extra'?'Scene 03 分岐　'+scene.title:'第'+scene.number+'章　'+scene.title;
   el('chapter-subtitle').textContent=scene.kind==='romance_extra'?(romanceMode==='r18'?'MIKA POV / R-18':'PROTAGONIST POV / ALL AGES'):'MIKA / PAST ARC';
   portrait.hidden=true;bgImage.hidden=true;return;
  }
@@ -301,13 +306,13 @@ function draw(){
  el('speaker').style.display=line.speaker?'block':'none';
  el('speaker').textContent=line.speaker||'';
  el('text').textContent=line.text||'';
- el('progress').textContent=(scene.kind==='romance_extra'?'追加恋愛イベント':scene.number+' / '+regularChapterCount+'章')+'　'+(li+1)+' / '+scene.lines.length+'　タップで進む';
+ el('progress').textContent=(scene.kind==='romance_extra'?'Scene 03・'+(romanceMode==='r18'?'R-18':'全年齢'):scene.number+' / '+regularChapterCount+'章')+'　'+(li+1)+' / '+scene.lines.length+'　タップで進む';
  renderArt();
 }
 function advance(){
  if(menuOpen||transitioning)return;
  if(mode==='end')return;
- if(mode==='intro'){mode='chapter';draw();return}
+ if(mode==='intro')return; // タイトルはバージョン選択が必須
  if(mode==='chapter'){li=0;place=chapters[ci].topic;mode='line';draw();return}
  if(chapters[ci].lines[li]?.choice)return;
  const next=chapters[ci].lines[li+1];
@@ -317,7 +322,7 @@ function advance(){
  li++;
  if(li>=chapters[ci].lines.length){
   cancelAuto();
-  if(ci===2 && romanceMode!=='off'){ci=romanceSampleIndex;mode='chapter';}
+  if(ci===2){ci=romanceSampleIndex;mode='chapter';}
   else if(ci===romanceSampleIndex){ci=3;mode='chapter';}
   else if(ci>=regularChapterCount-1){mode='end';}
   else{ci++;mode='chapter';}
@@ -326,7 +331,7 @@ function advance(){
  draw();
 }
 function jump(n){cancelAuto();clearSceneFade();resetAllChapters();ci=n;li=0;place='';mode='chapter';resetArt();closeMenu();draw()}
-function restart(){cancelAuto();clearSceneFade();resetAllChapters();ci=0;li=0;place='';mode='intro';resetArt();draw()}
+function restart(){cancelAuto();clearSceneFade();resetAllChapters();romanceMode=null;ci=0;li=0;place='';mode='intro';resetArt();draw()}
 function delay(){const line=chapters[ci].lines[li];return Math.min(6500,Math.max(1700,1350+(line.text||'').length*75))}
 function loop(){
  if(!playing||mode!=='line'||menuOpen||chapters[ci].lines[li]?.choice){cancelAuto();return}
@@ -342,38 +347,20 @@ function toggle(kind){
  playing=kind;el(kind).setAttribute('aria-pressed','true');
  el(kind).textContent=kind==='auto'?'Ⅱ オート停止':'■ スキップ停止';loop();
 }
-function setRomanceMode(next){
- if(!['off','allages','r18'].includes(next))return;
- if(next==='r18' && romanceMode!=='r18' && !window.confirm('R-18版には具体的な性的描写が含まれます。18歳以上で、成人向け原稿を表示しますか？'))return;
- const prior=romanceMode;
+function selectVersion(next){
+ if(!['allages','r18'].includes(next) || mode!=='intro')return;
+ if(next==='r18' && !window.confirm('R-18版には具体的な性的描写が含まれます。18歳以上で、R-18版を再生しますか？'))return;
  romanceMode=next;
- try{localStorage.setItem(ROMANCE_PREF_KEY,romanceMode)}catch(_){}
- const active=romanceMode!=='off';
- const data=romanceMode==='r18'?sourceExtraR18:sourceExtra;
+ const data=next==='r18'?sourceExtraR18:sourceExtra;
  const extra=chapters[romanceSampleIndex];
  extra.title=data.title;
- extra.partTitle='ミカ過去編 Scene 03 第5場面の直後／'+(romanceMode==='r18'?'R-18・ミカ視点':'全年齢・主人公視点');
- extra.topic=romanceMode==='r18'?'ミカの部屋／夜':'主人公の部屋／夜';
+ extra.partTitle='ミカ過去編 Scene 03 第5場面の直後／'+(next==='r18'?'R-18・ミカ視点':'全年齢・主人公視点');
+ extra.topic=next==='r18'?'ミカの部屋／夜':'主人公の部屋／夜';
  extra.lines=data.lines.slice();
  chapterTemplates[romanceSampleIndex]=data.lines.slice();
- const toggleButton=el('romance-toggle');
- toggleButton.setAttribute('aria-pressed',String(active));
- toggleButton.textContent=romanceMode==='off'?'♡ 追加OFF':romanceMode==='r18'?'♡ R-18':'♡ 全年齢';
- el('extra-demo').hidden=!active;
  const extraButton=el('chapter-list').querySelectorAll('button')[romanceSampleIndex];
- if(extraButton){
-  extraButton.hidden=!active;
-  extraButton.querySelector('span').textContent='追加恋愛イベント｜'+(romanceMode==='r18'?'R-18・ミカ視点':'全年齢・主人公視点');
- }
- if(ci===romanceSampleIndex && prior!==next){
-  cancelAuto();clearSceneFade();resetArt();place='';li=0;
-  if(!active){ci=3;mode='chapter';}
-  else {mode='chapter';}
-  draw();
- }
-}
-function cycleRomanceMode(){
- setRomanceMode(romanceMode==='off'?'allages':romanceMode==='allages'?'r18':'off');
+ if(extraButton)extraButton.querySelector('span').textContent='Scene 03 分岐｜'+(next==='r18'?'R-18・ミカ視点':'全年齢・主人公視点');
+ mode='chapter';ci=0;li=0;place='';resetArt();draw(); // intro -> Scene 01の章カード
 }
 function openMenu(){cancelAuto();clearSceneFade();menuOpen=true;el('chapter-menu').hidden=false;const buttons=el('chapter-list').querySelectorAll('button');buttons.forEach((button,i)=>button.classList.toggle('current',i===ci))}
 function closeMenu(){menuOpen=false;el('chapter-menu').hidden=true}
@@ -381,30 +368,28 @@ const listing=el('chapter-list');
 chapters.forEach((scene,i)=>{
  const b=document.createElement('button');b.type='button';
  const small=document.createElement('span');small.textContent=scene.partNumber+'｜'+scene.partTitle;b.appendChild(small);
- b.appendChild(document.createTextNode(scene.kind==='romance_extra'?'♡ ミカ追加　'+scene.title:'第'+scene.number+'章　'+scene.title));
+ b.appendChild(document.createTextNode(scene.kind==='romance_extra'?'Scene 03 分岐　'+scene.title:'第'+scene.number+'章　'+scene.title));
  b.addEventListener('click',event=>{event.stopPropagation();jump(i)});
  listing.appendChild(b);
 });
 root.addEventListener('click',event=>{if(event.target.closest('button')||menuOpen||transitioning)return;if(playing)cancelAuto();advance()});
-el('start').addEventListener('click',event=>{event.stopPropagation();advance()});
+el('start-allages').addEventListener('click',event=>{event.stopPropagation();selectVersion('allages')});
+el('start-r18').addEventListener('click',event=>{event.stopPropagation();selectVersion('r18')});
 el('back').addEventListener('click',event=>{event.stopPropagation();restart()});
 el('restart').addEventListener('click',event=>{event.stopPropagation();restart()});
 el('auto').addEventListener('click',event=>{event.stopPropagation();toggle('auto')});
 el('skip').addEventListener('click',event=>{event.stopPropagation();toggle('skip')});
 el('toc').addEventListener('click',event=>{event.stopPropagation();openMenu()});
-el('romance-toggle').addEventListener('click',event=>{event.stopPropagation();cycleRomanceMode()});
-el('extra-demo').addEventListener('click',event=>{event.stopPropagation();if(romanceMode!=='off')jump(romanceSampleIndex)});
 el('close-menu').addEventListener('click',event=>{event.stopPropagation();closeMenu()});
 document.addEventListener('keydown',event=>{
  if(event.repeat)return;
  if(event.key==='Escape'){if(menuOpen)closeMenu();else cancelAuto();return}
- if(menuOpen||transitioning||event.target.closest('button'))return;
+ if(menuOpen||transitioning||mode==='intro'||event.target.closest('button'))return;
  if(event.key.toLowerCase()==='m'){openMenu();return}
  if(event.key.toLowerCase()==='a'){toggle('auto');return}
  if(event.key.toLowerCase()==='s'){toggle('skip');return}
  if(event.key==='Enter'||event.key===' '||event.key==='ArrowRight'){event.preventDefault();if(playing)cancelAuto();advance()}
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelAuto()});
-setRomanceMode(romanceMode);
 draw();
 </script></body></html></html>
