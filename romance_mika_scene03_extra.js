@@ -128,7 +128,7 @@ window.KM_MIKA_SCENE03_EXTRA={
     },
     {
       "speaker": "",
-      "text": "週末の欄には、もう予定を入れていない。"
+      "text": "週末の欄には、まだ予定を入れていない。"
     },
     {
       "speaker": "",
