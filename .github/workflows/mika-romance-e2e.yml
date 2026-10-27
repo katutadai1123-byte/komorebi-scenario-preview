@@ -1,0 +1,29 @@
+name: Mika optional adult romance preview test
+on:
+  push:
+    branches:
+      - feature/mika-extra-scene03-20261027
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Browser setup
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Run Chromium scenario test
+        run: |
+          mkdir -p test-artifacts
+          python3 -m http.server 8766 --bind 127.0.0.1 >/tmp/test-http.log 2>&1 &
+          node tests/mika-romance-e2e.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mika-romance-preview-screenshots
+          path: test-artifacts/

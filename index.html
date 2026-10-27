@@ -110,15 +110,15 @@ html,body{margin:0;min-height:100%;background:#18141c;color:#fff;font-family:"Hi
 <nav id="reader-bar" aria-label="シナリオ再生操作">
 <button id="back" type="button">↺ 最初から</button>
 <button id="auto" type="button" aria-pressed="false">▶ オート</button>
-<button id="skip" type="button" aria-pressed="false">» スキップ</button><button id="romance-toggle" type="button" aria-pressed="false" title="任意の追加恋愛イベントの表示を切り替え">♡ 追加OFF</button><button id="extra-demo" type="button" hidden title="未採用の追加恋愛イベント操作サンプルを再生">♡ 体験</button><button id="toc" type="button">☷ 章一覧</button>
+<button id="skip" type="button" aria-pressed="false">» スキップ</button><button id="romance-toggle" type="button" aria-pressed="false" title="任意の追加恋愛イベントの表示を切り替え">♡ 追加OFF</button><button id="extra-demo" type="button" hidden title="ミカ追加恋愛イベントを再生（成人向け）">♡ ミカ追加</button><button id="toc" type="button">☷ 章一覧</button>
 </nav>
 <div id="chapter" aria-live="polite"><span class="part" id="part"></span><h2 id="chapter-title"></h2><span class="subtitle" id="chapter-subtitle"></span><p class="hint">画面をタップして読み始める</p></div>
 <section id="chapter-menu" hidden role="dialog" aria-modal="true" aria-label="章一覧">
 <div class="menu-panel"><div class="menu-head"><h2>章一覧</h2><button type="button" id="close-menu">× 閉じる</button></div>
 <p>読み直したい章を選択してください。</p><div id="chapter-list"></div></div></section>
 <div id="endcard"><h2>ここまで</h2><p>収録シーンの再生が終わりました。</p><button id="restart" type="button">最初から</button></div>
-<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19 · v07</small><h1>ミカ過去編</h1><p>全19章収録（第1・2章は選択肢付きVer.07）· 章一覧／オート／スキップ<br>背景・立ち絵は章タイトルをタップした後に表示<br>仮原稿プレビュー（セーブデータへの影響なし）<br>「♡ 追加OFF」をONにすると、独立した追加イベントの操作サンプルを体験できます</p><button id="start">イベントを見る ›</button></div>
-</div><script src="./mika_past01_preview.js"></script><script src="./scenes_02_06.js"></script><script src="./scenes_07_19.js"></script><script src="./mika_scenes_01_02_choices_v07.js"></script>
+<div id="intro"><small>MIKA / PAST ARC · SCENE 01–19 · v07</small><h1>ミカ過去編</h1><p>全19章収録（第1・2章は選択肢付きVer.07）· 章一覧／オート／スキップ<br>背景・立ち絵は章タイトルをタップした後に表示<br>仮原稿プレビュー（セーブデータへの影響なし）<br>追加恋愛イベントは成人向けの性的な描写を含みます（初期OFF）。18歳以上の方のみ、内容を確認して有効にしてください。</p><button id="start">イベントを見る ›</button></div>
+</div><script src="./mika_past01_preview.js"></script><script src="./scenes_02_06.js"></script><script src="./scenes_07_19.js"></script><script src="./mika_scenes_01_02_choices_v07.js"></script><script src="./romance_mika_scene03_extra.js"></script>
 <script>
 'use strict';
 const el=id=>document.getElementById(id);
@@ -129,20 +129,16 @@ const chapters=[
  ...window.KM_MANUSCRIPT_REMAINING
 ];
 if(chapters.length!==19)throw Error('Incomplete past-arc chapters');
-// 通常19章とは完全に独立した、表示切替の動作確認用サンプル。採用原稿ではない。
+// Scene 03の最後の場面に続く、作者提供の任意イベント。元の19章は未改変。
 const regularChapterCount=chapters.length;
 const romanceSampleIndex=regularChapterCount;
+const sourceExtra=window.KM_MIKA_SCENE03_EXTRA;
+if(!sourceExtra || sourceExtra.kind!=='romance_extra' || !Array.isArray(sourceExtra.lines))throw Error('Additional romance script not loaded');
 chapters.push({
- number:20,kind:'romance_extra',title:'恋人の時間（操作サンプル）',
- partNumber:'追加恋愛イベント',partTitle:'本編未採用・表示切替の動作確認',
- topic:'公園／夕方',lines:[
- {speaker:'',text:'【追加恋愛イベント／動作確認用】この会話はゲーム内でのON/OFFを試すための仮テキストです。採用済みのシナリオではありません。',place:'公園／夕方'},
- {speaker:'陽奈子',text:'……あの、もう少しだけ、隣にいてもいいですか？'},
- {speaker:'主人公',text:'ほう。俺の隣がそんなに気に入ったのか？'},
- {speaker:'陽奈子',text:'はい。……だって、今は私が彼女ですから。'},
- {speaker:'',text:'彼女は少し照れたように笑って、そっと彼の袖をつまんだ。'},
- {speaker:'',text:'【体験終了】OFFではこの追加イベントは章一覧から消え、通常の19章だけが再生されます。'}
- ]});
+ number:20,kind:'romance_extra',title:sourceExtra.title,
+ partNumber:'追加恋愛イベント',partTitle:'ミカ過去編 Scene 03 第5場面の直後／成人向け',
+ topic:'ミカの部屋／夜',lines:sourceExtra.lines
+});
 const chapterTemplates=chapters.map(chapter=>chapter.lines.slice());
 function resetChapter(index){chapters[index].lines=chapterTemplates[index].slice()}
 function resetAllChapters(){chapters.forEach((_,index)=>resetChapter(index))}
@@ -185,9 +181,11 @@ function portraitFor(n,location,lineIndex){
  if(n===6)return location.includes('喫茶店')?'casual':'hospital';
  if(n>=9&&n<=16&&location.includes('病室'))return 'hospital';
  if(n===17&&location.includes('病室'))return 'hospital';
+ // Optional adult scene uses bedroom background only until a matching pajama portrait is ready.
+ if(n===20)return '';
  return '';
 }
-const ROMANCE_PREF_KEY='komorebi_scenario_romance_extra_v1';
+const ROMANCE_PREF_KEY='komorebi_scenario_romance_extra_adult_v2';
 let romanceExtraEnabled=(()=>{try{return localStorage.getItem(ROMANCE_PREF_KEY)==='on'}catch(_){return false}})();
 let ci=0,li=0,mode='intro',place='',playing='',timer=null,menuOpen=false;
 let transitioning=false,fadeTimer=null;
@@ -299,7 +297,7 @@ function draw(){
  el('speaker').style.display=line.speaker?'block':'none';
  el('speaker').textContent=line.speaker||'';
  el('text').textContent=line.text||'';
- el('progress').textContent=(scene.kind==='romance_extra'?'追加イベント・サンプル':scene.number+' / '+regularChapterCount+'章')+'　'+(li+1)+' / '+scene.lines.length+'　タップで進む';
+ el('progress').textContent=(scene.kind==='romance_extra'?'追加恋愛イベント':scene.number+' / '+regularChapterCount+'章')+'　'+(li+1)+' / '+scene.lines.length+'　タップで進む';
  renderArt();
 }
 function advance(){
@@ -313,7 +311,14 @@ function advance(){
   beginSceneFade(()=>{li++;draw()});return;
  }
  li++;
- if(li>=chapters[ci].lines.length){cancelAuto();if(ci>=regularChapterCount-1){mode='end'}else{ci++;mode='chapter'}place='';resetArt();draw();return}
+ if(li>=chapters[ci].lines.length){
+  cancelAuto();
+  if(ci===2 && romanceExtraEnabled){ci=romanceSampleIndex;mode='chapter';}
+  else if(ci===romanceSampleIndex){ci=3;mode='chapter';}
+  else if(ci>=regularChapterCount-1){mode='end';}
+  else{ci++;mode='chapter';}
+  place='';resetArt();draw();return
+ }
  draw();
 }
 function jump(n){cancelAuto();clearSceneFade();resetAllChapters();ci=n;li=0;place='';mode='chapter';resetArt();closeMenu();draw()}
@@ -334,6 +339,9 @@ function toggle(kind){
  el(kind).textContent=kind==='auto'?'Ⅱ オート停止':'■ スキップ停止';loop();
 }
 function setRomanceExtra(enabled){
+ if(enabled&&!romanceExtraEnabled){
+  if(!window.confirm('この追加恋愛イベントは成人向けの具体的な性的描写を含みます。18歳以上の場合のみ有効にしてください。18歳以上ですか？'))return;
+ }
  romanceExtraEnabled=Boolean(enabled);
  try{localStorage.setItem(ROMANCE_PREF_KEY,romanceExtraEnabled?'on':'off')}catch(_){}
  const toggleButton=el('romance-toggle');
@@ -343,7 +351,7 @@ function setRomanceExtra(enabled){
  const extraButton=el('chapter-list').querySelectorAll('button')[romanceSampleIndex];
  if(extraButton)extraButton.hidden=!romanceExtraEnabled;
  if(!romanceExtraEnabled&&ci===romanceSampleIndex){
-  cancelAuto();clearSceneFade();ci=regularChapterCount-1;mode='end';place='';resetArt();draw();
+  cancelAuto();clearSceneFade();ci=3;mode='chapter';place='';resetArt();draw();
  }
 }
 function openMenu(){cancelAuto();clearSceneFade();menuOpen=true;el('chapter-menu').hidden=false;const buttons=el('chapter-list').querySelectorAll('button');buttons.forEach((button,i)=>button.classList.toggle('current',i===ci))}
@@ -352,7 +360,7 @@ const listing=el('chapter-list');
 chapters.forEach((scene,i)=>{
  const b=document.createElement('button');b.type='button';
  const small=document.createElement('span');small.textContent=scene.partNumber+'｜'+scene.partTitle;b.appendChild(small);
- b.appendChild(document.createTextNode(scene.kind==='romance_extra'?'♡ 追加イベント体験　'+scene.title:'第'+scene.number+'章　'+scene.title));
+ b.appendChild(document.createTextNode(scene.kind==='romance_extra'?'♡ ミカ追加　'+scene.title:'第'+scene.number+'章　'+scene.title));
  b.addEventListener('click',event=>{event.stopPropagation();jump(i)});
  listing.appendChild(b);
 });
